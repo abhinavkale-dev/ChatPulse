@@ -17,8 +17,7 @@ const io = new Server(server,{
         methods: ["GET", "POST"],
         credentials: true
     },
-    adapter: createAdapter(redis),
-      transports: ['websocket']
+    adapter: createAdapter(redis)
 })
 
 app.use(cors())

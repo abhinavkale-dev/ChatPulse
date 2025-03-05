@@ -11,11 +11,10 @@ generator client {
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
 }
 
 model User {
-  id        String      @id @default(uuid())
+  id        String      @id @default(uuid()) @db.Uuid
   email     String?     @unique @db.VarChar(100)
   password  String?     @db.VarChar(100)
   avatar    String?
@@ -35,6 +34,7 @@ model ChatGroup {
   createdAt  DateTime     @default(now())
   updateAt   DateTime     @updatedAt
   GroupUsers GroupUsers[]
+  Chats      Chats[]
 
   @@map("chat_groups")
 }
@@ -43,7 +43,20 @@ model GroupUsers {
   id        Int       @id @default(autoincrement())
   group     ChatGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
   groupId   String    @db.Uuid
+  name String
   createdAt DateTime  @default(now())
 
   @@map("group_users")
+}
+
+model Chats {
+  id String @id @default(uuid()) @db.Uuid
+  group ChatGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  groupId String @db.Uuid
+  message String?
+  name String
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@map("chats")
 }

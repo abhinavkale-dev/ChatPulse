@@ -5,18 +5,14 @@ import { Session, User, Account, Profile } from "next-auth";
 import { signInSchema, signUpSchema } from "./zod";
 import { JWT } from "next-auth/jwt";
 import bcrypt from "bcryptjs";
-
-interface FormModal {
-  email: string;
-  password: string;
-  confirmPassword?: string;
-}
+import { PrismaAdapter } from "@next-auth/prisma-adapter";
 
 interface AuthRecognise {
   id: string;
   email: string | null;
 }
 
+// Create a single Prisma instance for the entire app
 const prisma = new PrismaClient();
 
 async function checkIfEmailUsedWithGoogle(email: string) {
@@ -27,6 +23,7 @@ async function checkIfEmailUsedWithGoogle(email: string) {
 }
 
 export const authOptions = {
+  adapter: PrismaAdapter(prisma),
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID as string,
@@ -43,7 +40,8 @@ export const authOptions = {
           id: profile.sub,
           name: profile.name,
           email: profile.email,
-          image: profile.image,
+          image: profile.picture,
+          avatar: profile.picture,
         };
       },
     }),
@@ -63,14 +61,11 @@ export const authOptions = {
 
         const { email, password, confirmPassword } = credentials;
 
-
         if (!email || !password) {
           throw new Error("Email and password are required");
         }
 
-
         await checkIfEmailUsedWithGoogle(email);
-
 
         if (confirmPassword) {
           signUpSchema.parse({ email, password, confirmPassword });
@@ -79,7 +74,6 @@ export const authOptions = {
           if (existingUser) {
             return null;
           }
-
 
           const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -100,7 +94,7 @@ export const authOptions = {
             throw new Error("No user found. Please sign up first.");
           }
 
-          const isPasswordValid = await bcrypt.compare(password, user.password!);
+          const isPasswordValid = await bcrypt.compare(password, user.password || '');
         
           if (!isPasswordValid) {
             throw new Error("Invalid password.");
@@ -111,27 +105,17 @@ export const authOptions = {
     }),
   ],
   secret: process.env.NEXTAUTH_SECRET,
+  pages: {
+    signIn: '/signin',
+    signOut: '/signout',
+    error: '/signin', 
+    verifyRequest: '/verify-request',
+    newUser: '/' 
+  },
+  session: {
+    strategy: 'jwt' as const,
+  },
   callbacks: {
-    async signIn({ user, account }: { user: User; account: Account | null }) {
-      if (account?.provider === "google") {
-        try {
-          const existingUser = await prisma.user.findUnique({ where: { email: user.email! } });
-          if (!existingUser) {
-            await prisma.user.create({
-              data: {
-                email: user.email!,
-                avatar: user.image,
-              },
-            });
-          }
-          return true;
-        } catch (error) {
-          console.error("Error in signIn callback", error);
-          return `/auth/signin?error=Failed to create a user account`;
-        }
-      }
-      return true;
-    },
     async jwt({
       token,
       user,
@@ -140,14 +124,13 @@ export const authOptions = {
     }: {
       token: JWT;
       user?: User;
-      account: Account | null;
-      profile?: Profile | null;
+      account?: Account | null;
+      profile?: Profile | undefined;
     }) {
       if (user) {
         token.id = user.id;
         token.email = user.email;
-        token.avatar =
-          user.avatar || (account?.provider === "google" && profile?.image ? profile.image : null);
+        token.avatar = user.avatar || (account?.provider === "google" && profile?.image ? profile.image : null);
       }
       return token;
     },
