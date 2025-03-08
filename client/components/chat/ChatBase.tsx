@@ -32,6 +32,6 @@ export default function ChatBase({groupId}: {groupId: string} ){
     }
 
     return (
-        <Button onClick={handleClick }>Send</Button>
+        <Button onClick={handleClick}>Send</Button>
     )
 }

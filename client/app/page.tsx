@@ -1,8 +1,18 @@
+'use client';
+
 import { Button } from "@/components/ui/button";
-import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
+  const router = useRouter();
+
+  const handleGetStarted = () => {
+    router.push('/signin');
+  };
+
   return (
-    <Button>GET STARTED</Button>
+      <Button onClick={handleGetStarted}>
+        GET STARTED
+      </Button>
   );
 }

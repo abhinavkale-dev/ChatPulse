@@ -49,7 +49,7 @@ export function Signup() {
       toast.success("Welcome!", {
         description: "Successfully signed up"
       });
-      router.replace("/");
+      router.replace("/home");
     }
   }, [status, router]);
 
