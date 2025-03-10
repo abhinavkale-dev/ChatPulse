@@ -1,15 +1,17 @@
-import ChatBase from '@/components/chat/ChatBase'
-import React from 'react'
+"use client"
 
-async function Chat({params}: {params: {id:string}}) {
-  const {id} = await params
-    console.log("The group id is", id)
+import ChatBase from '@/components/chat/ChatBase'
+import { useParams } from 'next/navigation'
+
+export default function Chat() {
+  const params = useParams();
+  const id = params.id as string;
+
   return (
-    <div>
-        <h1>Hi from Chat</h1>
-        <ChatBase groupId={id}/>
+    <div className="flex flex-col h-screen bg-background">
+      <main className="flex-1 overflow-hidden">
+        <ChatBase groupId={id} />
+      </main>
     </div>
   )
 }
-
-export default Chat

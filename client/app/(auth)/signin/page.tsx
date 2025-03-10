@@ -1,9 +1,10 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { useForm } from "react-hook-form";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Form,
   FormControl,
@@ -12,15 +13,14 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { signIn, useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import { signInSchema } from "@/app/lib/zod";
-import { useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import Link from "next/link";
+import { useState, useEffect } from "react";
+import { Loader2 } from "lucide-react";
+import { signIn, useSession } from "next-auth/react";
 import { FcGoogle } from "react-icons/fc";
+import { useRouter } from "next/navigation";
+import type { z } from "zod";
 
 export default function SigninPage() {
   return (
@@ -34,7 +34,6 @@ export function Signin() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
   const { data: session, status } = useSession();
-
   const form = useForm<z.infer<typeof signInSchema>>({
     resolver: zodResolver(signInSchema),
     defaultValues: {
@@ -44,18 +43,17 @@ export function Signin() {
   });
 
   useEffect(() => {
-    if (status === "authenticated") {
-      toast.success("Welcome back!", {
-        description: "Successfully signed in"
-      });
-      router.push("/home");
+    if (status === 'authenticated') {
+      // Let the home layout handle the welcome toast
+      router.replace('/home');
     }
   }, [status, router]);
 
-  if (status === "loading") {
+  if (status === 'loading') {
     return null;
   }
-  if (status === "authenticated") {
+
+  if (status === 'authenticated') {
     return null;
   }
 
@@ -65,11 +63,8 @@ export function Signin() {
       const result = await signIn("credentials", {
         email: values.email,
         password: values.password,
-        redirect: true,
-        callbackUrl: "/home"
+        redirect: false,
       });
-
-      console.log("SignIn result (should not show if redirect works):", result);
 
       if (result?.error) {
         toast.error("Sign In Failed", {
@@ -77,15 +72,14 @@ export function Signin() {
         });
         console.error("Sign in error:", result.error);
       } else {
-        toast.success("Welcome back!", {
-          description: "You have been signed in successfully."
-        });
+        // Let the home layout handle the success toast
+        router.push("/home");
       }
     } catch (error) {
+      console.error("Sign in error:", error);
       toast.error("Sign In Failed", {
         description: "An unexpected error occurred. Please try again later."
       });
-      console.error("Signin error:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -93,8 +87,7 @@ export function Signin() {
 
   const handleGoogleSignin = () => {
     signIn("google", {
-      callbackUrl: "/home",
-      redirect: true
+      callbackUrl: "/home"
     });
   };
 
@@ -118,17 +111,16 @@ export function Signin() {
               <FormItem>
                 <FormLabel className="text-white/80">Email</FormLabel>
                 <FormControl>
-                  <Input 
-                    placeholder="Enter your email" 
-                    className="border-white/10 bg-white/5 text-white placeholder:text-white/40"
-                    {...field} 
+                  <Input
+                    placeholder="Email"
+                    className="bg-white/5 border-white/10 text-white"
+                    {...field}
                   />
                 </FormControl>
-                <FormMessage className="text-rose-500" />
+                <FormMessage />
               </FormItem>
             )}
           />
-
           <FormField
             control={form.control}
             name="password"
@@ -136,14 +128,14 @@ export function Signin() {
               <FormItem>
                 <FormLabel className="text-white/80">Password</FormLabel>
                 <FormControl>
-                  <Input 
+                  <Input
+                    placeholder="Password"
                     type="password"
-                    placeholder="Enter your password" 
-                    className="border-white/10 bg-white/5 text-white placeholder:text-white/40"
-                    {...field} 
+                    className="bg-white/5 border-white/10 text-white"
+                    {...field}
                   />
                 </FormControl>
-                <FormMessage className="text-rose-500" />
+                <FormMessage />
               </FormItem>
             )}
           />
@@ -169,29 +161,25 @@ export function Signin() {
         <div className="absolute inset-0 flex items-center">
           <div className="w-full border-t border-white/[0.08]"></div>
         </div>
-        <div className="relative flex justify-center text-sm">
-          <span className="bg-[#030303] px-2 text-white/40">or continue with</span>
+        <div className="relative flex justify-center text-xs">
+          <span className="bg-[#030303] px-2 text-white/60">Or continue with</span>
         </div>
       </div>
 
       <Button
         onClick={handleGoogleSignin}
-        className="w-full border border-white/10 bg-white/5 text-white hover:bg-white/10"
-        type="button"
+        className="w-full flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 text-white border border-white/10"
       >
-        <FcGoogle className="mr-2 text-xl" />
-        Sign in with Google
+        <FcGoogle className="h-5 w-5" />
+        <span>Google</span>
       </Button>
 
-      <p className="text-center text-sm text-white/60">
+      <div className="text-center text-sm text-white/60">
         Don't have an account?{" "}
-        <Link 
-          href="/signup" 
-          className="font-medium text-white hover:text-white/80 transition-colors"
-        >
+        <Link href="/signup" className="font-medium text-indigo-400 hover:text-indigo-300">
           Sign up
         </Link>
-      </p>
+      </div>
     </div>
   );
 }

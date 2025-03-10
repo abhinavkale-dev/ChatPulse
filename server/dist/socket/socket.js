@@ -1,9 +1,20 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.setupSocket = setupSocket;
-const bullmq_1 = require("../bullmq/bullmq");
+const prisma_server_1 = __importDefault(require("../lib/prisma.server"));
 function setupSocket(io) {
-    // Use middleware to extract the room from the socket handshake.
     io.use((socket, next) => {
         const room = socket.handshake.auth.room;
         if (room) {
@@ -20,46 +31,67 @@ function setupSocket(io) {
             console.log(`Socket ${socket.id} connected without a room (possibly admin UI)`);
         }
         console.log("Socket connected:", socket.id);
-        // When a client sends a message, enqueue it into the BullMQ chat queue.
-        socket.on("message", (data) => {
-            console.log("Received socket message:", data);
-            // Prepare the chat message using data from the client.
-            const chatMessage = {
-                sender: data.name, // Assuming the client sends a "name" field
-                message: data.message || data.id, // Use data.message if available
-                room: socket.room || 'general'
-            };
-            // Enqueue the chat message job.
-            bullmq_1.chatQueue.add('chat_message', chatMessage)
-                .then((job) => {
-                console.log(`Enqueued chat message with job id ${job.id}`);
-            })
-                .catch((err) => {
-                console.error('Failed to enqueue chat message:', err);
-            });
-        });
+        // Handle messages and save to database
+        socket.on("message", (data) => __awaiter(this, void 0, void 0, function* () {
+            try {
+                console.log("Received socket message:", data);
+                if (!data.name || !data.message) {
+                    console.error("Invalid message format. Required: name and message");
+                    return;
+                }
+                const now = new Date();
+                // Prepare the chat message
+                const chatMessage = {
+                    sender: data.name,
+                    message: data.message,
+                    room: socket.room || 'general',
+                    createdAt: now
+                };
+                console.log(`Processing message: [${chatMessage.room}] ${chatMessage.sender}: ${chatMessage.message}`);
+                // Broadcast the message directly to the room, including the timestamp
+                if (chatMessage.room) {
+                    io.to(chatMessage.room).emit("message", chatMessage);
+                }
+                else {
+                    io.emit("message", chatMessage);
+                }
+                // Save the message to the database
+                try {
+                    const savedMessage = yield prisma_server_1.default.chatMessage.create({
+                        data: {
+                            sender: chatMessage.sender,
+                            message: chatMessage.message,
+                            room: chatMessage.room,
+                            // createdAt is automatically set by Prisma
+                        },
+                    });
+                    console.log(`Message saved to database with ID: ${savedMessage.id}`);
+                }
+                catch (dbError) {
+                    console.error('Failed to save chat message to the primary table:', dbError);
+                    // Fallback to Chats table if ChatMessage fails
+                    try {
+                        const savedChat = yield prisma_server_1.default.chats.create({
+                            data: {
+                                name: chatMessage.sender,
+                                message: chatMessage.message,
+                                groupId: chatMessage.room,
+                                // createdAt is automatically set by Prisma
+                            },
+                        });
+                        console.log(`Message saved to chats table with ID: ${savedChat.id}`);
+                    }
+                    catch (fallbackError) {
+                        console.error('Failed to save to fallback table:', fallbackError);
+                    }
+                }
+            }
+            catch (error) {
+                console.error('Error processing message:', error);
+            }
+        }));
         socket.on("disconnect", () => {
             console.log("A user disconnected:", socket.id);
         });
-    });
-    // Listen for completed chat jobs from BullMQ.
-    // When a job is completed, broadcast the processed chat message.
-    bullmq_1.chatWorker.on('completed', (job, result) => {
-        console.log(`Broadcasting message: [${result.room}] ${result.sender}: ${result.message}`);
-        if (result.room) {
-            io.to(result.room).emit("message", result);
-        }
-        else {
-            io.emit("message", result);
-        }
-    });
-    // Optional: Handle job failures.
-    bullmq_1.chatWorker.on('failed', (job, err) => {
-        if (job) {
-            console.error(`Job ${job.id} failed with error: ${err.message}`);
-        }
-        else {
-            console.error(`Job failed with error: ${err.message}`);
-        }
     });
 }

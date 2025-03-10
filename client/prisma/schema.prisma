@@ -69,7 +69,6 @@ model ChatGroup {
   user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId     String       @db.Uuid
   title      String       @db.VarChar(100)
-  passcode   String       @db.VarChar(30)
   createdAt  DateTime     @default(now())
   updateAt   DateTime     @updatedAt
   GroupUsers GroupUsers[]

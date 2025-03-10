@@ -15,7 +15,6 @@
     "@socket.io/admin-ui": "^0.5.1",
     "@socket.io/redis-streams-adapter": "^0.2.2",
     "@types/express": "^5.0.0",
-    "bullmq": "^5.41.7",
     "express": "^4.21.2",
     "http": "^0.0.1-security",
     "ioredis": "^5.5.0",
