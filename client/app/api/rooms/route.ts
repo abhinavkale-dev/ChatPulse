@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
       data: {
         userId: user.id,
         title: roomName,
-        updateAt: new Date()
+        updatedAt: new Date()
       }
     })
     return NextResponse.json({room})

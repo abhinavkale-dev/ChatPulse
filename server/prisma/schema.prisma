@@ -69,7 +69,6 @@ model ChatGroup {
   createdAt  DateTime     @default(now())
   updateAt   DateTime     @updatedAt
   user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  Chats      Chats[]
   GroupUsers GroupUsers[]
 
   @@map("chat_groups")
@@ -83,24 +82,4 @@ model GroupUsers {
   group     ChatGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
 
   @@map("group_users")
-}
-
-model Chats {
-  id        String    @id @default(uuid()) @db.Uuid
-  groupId   String    @db.Uuid
-  message   String?
-  name      String
-  createdAt DateTime  @default(now())
-  group     ChatGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
-
-  @@index([createdAt])
-  @@map("chats")
-}
-
-model ChatMessage {
-  id        Int      @id @default(autoincrement())
-  sender    String
-  message   String
-  room      String
-  createdAt DateTime @default(now())
 }
