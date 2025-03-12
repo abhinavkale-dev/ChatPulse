@@ -4,8 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { MessageCircleMore } from 'lucide-react'
 import Link from 'next/link'
-import React, { useState, useEffect } from 'react'
-
+import { useState, useEffect } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -18,79 +17,78 @@ import { Input } from '@/components/ui/input'
 import { useSession } from 'next-auth/react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from "sonner"
-import { string } from 'zod'
 
 interface ChatGroup {
-  id : string
+  id: string
   userId: string
   title: string
   createdAt: string
 }
 
-
-
-function Page() {
-  const {data: session} = useSession()
-  const [rooms, setRooms] = useState<ChatGroup[]>([]);
+function Home() {
+  const { data: session } = useSession()
+  const [rooms, setRooms] = useState<ChatGroup[]>([])
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [open, setOpen] = useState(false);
-  const [newRoomName, setNewRoomName] = useState("");
+  const [open, setOpen] = useState(false)
+  const [newRoomName, setNewRoomName] = useState("")
+  const [isCreating, setIsCreating] = useState(false)
 
   useEffect(() => {
-    const fetchRooms = async() => {
+    const fetchRooms = async () => {
       try {
         setIsLoading(true)
         const res = await fetch('/api/rooms')
-
-        if(!res.ok) {
+        if (!res.ok) {
           throw new Error("Failed to fetch")
         }
-
         const data = await res.json()
         setRooms(data.rooms || [])
         setError(null)
-      }
-      catch (err) {
-        console.error('Error fetching rooms:', err);
-        setError('Failed to load rooms. Please try again.');
+      } catch (err) {
+        console.error('Error fetching rooms:', err)
+        setError('Failed to load rooms. Please try again.')
       } finally {
-        setIsLoading(false);
+        setIsLoading(false)
       }
     }
-    fetchRooms();
+    fetchRooms()
+  }, [])
 
-  }, []);
-
-
-  const createRoom = async () => {
+  const createRoom = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault() 
+    if (isCreating) return 
+    
+    setIsCreating(true)
     try {
-      const roomName = newRoomName.trim() || `Room ${rooms.length + 1}`;
-      const res = await fetch('api/rooms', {
+      const roomName = newRoomName.trim() || `Room ${rooms.length + 1}`
+      const res = await fetch('/api/rooms', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({roomName})
+        body: JSON.stringify({ roomName })
       })
-      if(!res.ok) {
+      if (!res.ok) {
         throw new Error("Failed to create room")
       }
       const data = await res.json()
-      setRooms(prevRooms => [data.room, ...prevRooms]);
-      setNewRoomName("");
-      setOpen(false);
+      setRooms(prevRooms => [data.room, ...prevRooms])
+      setNewRoomName("")
+      setOpen(false)
       
       toast.success("Room created!", {
         description: `Room "${roomName}" has been created successfully.`
-      });
+      })
     } catch (err) {
-      console.error('Error creating room:', err);
+      console.error('Error creating room:', err)
       toast.error("Error", {
         description: "Failed to create room. Please try again."
-      });
+      })
+    } finally {
+      setIsCreating(false)
     }
-  };
+  }
 
   return (
     <>
@@ -110,7 +108,9 @@ function Page() {
             placeholder="Enter room name"
             className="border p-2"
           />
-          <Button onClick={createRoom}>Create</Button>
+          <Button onClick={createRoom} disabled={isCreating}>
+            {isCreating ? "Creating..." : "Create"}
+          </Button>
         </DialogContent>
       </Dialog>
 
@@ -139,7 +139,7 @@ function Page() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {rooms?.map(room => (
+            {rooms.map(room => (
               <Link href={`/chat/${room.id}`} key={room.id}>
                 <Card className="overflow-hidden hover:shadow-md transition-all hover:scale-[1.02] cursor-pointer">
                   <CardContent className="flex items-center justify-between p-4">
@@ -158,7 +158,7 @@ function Page() {
         )}
       </div>
     </>
-  );
+  )
 }
 
-export default Page;
+export default Home;

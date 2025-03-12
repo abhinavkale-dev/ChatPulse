@@ -1,19 +1,8 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.setupSocket = setupSocket;
-const prisma_server_1 = __importDefault(require("../lib/prisma.server"));
+// In-memory message storage (temporary, no database)
+const roomMessages = {};
 function setupSocket(io) {
     io.use((socket, next) => {
         const room = socket.handshake.auth.room;
@@ -24,72 +13,49 @@ function setupSocket(io) {
     });
     io.on("connection", (socket) => {
         if (socket.room) {
+            // Add socket to room
             socket.join(socket.room);
             console.log(`Socket ${socket.id} joined room: ${socket.room}`);
+            // Initialize room if needed
+            if (!roomMessages[socket.room]) {
+                roomMessages[socket.room] = [];
+            }
+            // Send existing room messages to new user
+            socket.emit("fetch_messages", roomMessages[socket.room] || []);
         }
         else {
-            console.log(`Socket ${socket.id} connected without a room (possibly admin UI)`);
+            console.log(`Socket ${socket.id} connected without a room`);
         }
-        console.log("Socket connected:", socket.id);
-        // Handle messages and save to database
-        socket.on("message", (data) => __awaiter(this, void 0, void 0, function* () {
-            try {
-                console.log("Received socket message:", data);
-                if (!data.name || !data.message) {
-                    console.error("Invalid message format. Required: name and message");
-                    return;
-                }
-                const now = new Date();
-                // Prepare the chat message
-                const chatMessage = {
-                    sender: data.name,
-                    message: data.message,
-                    room: socket.room || 'general',
-                    createdAt: now
-                };
-                console.log(`Processing message: [${chatMessage.room}] ${chatMessage.sender}: ${chatMessage.message}`);
-                // Broadcast the message directly to the room, including the timestamp
-                if (chatMessage.room) {
-                    io.to(chatMessage.room).emit("message", chatMessage);
-                }
-                else {
-                    io.emit("message", chatMessage);
-                }
-                // Save the message to the database
-                try {
-                    const savedMessage = yield prisma_server_1.default.chatMessage.create({
-                        data: {
-                            sender: chatMessage.sender,
-                            message: chatMessage.message,
-                            room: chatMessage.room,
-                            // createdAt is automatically set by Prisma
-                        },
-                    });
-                    console.log(`Message saved to database with ID: ${savedMessage.id}`);
-                }
-                catch (dbError) {
-                    console.error('Failed to save chat message to the primary table:', dbError);
-                    // Fallback to Chats table if ChatMessage fails
-                    try {
-                        const savedChat = yield prisma_server_1.default.chats.create({
-                            data: {
-                                name: chatMessage.sender,
-                                message: chatMessage.message,
-                                groupId: chatMessage.room,
-                                // createdAt is automatically set by Prisma
-                            },
-                        });
-                        console.log(`Message saved to chats table with ID: ${savedChat.id}`);
-                    }
-                    catch (fallbackError) {
-                        console.error('Failed to save to fallback table:', fallbackError);
-                    }
-                }
+        // Handle fetching messages for a room
+        socket.on("fetch_messages", (data, callback) => {
+            console.log(`Fetching messages for room: ${data.room}`);
+            callback(roomMessages[data.room] || []);
+        });
+        // Handle sending a new message
+        socket.on("send_message", (data) => {
+            console.log(`Received message from ${data.user.email} for room ${data.room}`);
+            // Ensure user has avatar or generate one
+            const userInfo = {
+                name: data.user.name || 'Anonymous',
+                email: data.user.email || 'unknown@example.com',
+                avatar: data.user.avatar || ""
+            };
+            const message = {
+                id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                sender: data.sender,
+                message: data.message,
+                room: data.room,
+                user: userInfo
+            };
+            // Store in memory
+            if (!roomMessages[data.room]) {
+                roomMessages[data.room] = [];
             }
-            catch (error) {
-                console.error('Error processing message:', error);
-            }
-        }));
+            roomMessages[data.room].push(message);
+            // Broadcast to everyone in the room
+            io.to(data.room).emit("new_message", message);
+            console.log(`Message broadcast to room: ${data.room}`);
+        });
         socket.on("disconnect", () => {
             console.log("A user disconnected:", socket.id);
         });

@@ -11,25 +11,24 @@ import {
 import { ChatInput } from "@/components/ui/chat-input"
 import { Button } from "@/components/ui/button"
 import { Send } from "lucide-react"
-import { format } from "date-fns"
 
-// Define the message type
-interface Message {
+interface ChatMessage {
   id: string
   sender: string
-  senderEmail: string
   message: string
-  avatar?: string
-  timestamp: Date
+  room: string
+  user: {
+    email: string
+    avatar?: string
+  }
 }
 
 export default function ChatBase({ groupId }: { groupId: string }) {
   const { data: session } = useSession()
-  const [messages, setMessages] = useState<Message[]>([])
-  const [inputMessage, setInputMessage] = useState("")
+  const [messages, setMessages] = useState<ChatMessage[]>([])
+  const [messageText, setMessageText] = useState("")
   const messagesEndRef = useRef<HTMLDivElement>(null)
-  
-  // Establish socket connection
+
   const socket = useMemo(() => {
     const socket = getSocket()
     socket.auth = {
@@ -38,126 +37,148 @@ export default function ChatBase({ groupId }: { groupId: string }) {
     return socket.connect()
   }, [groupId])
 
-  // Handle receiving messages
+  // Load messages from local storage on initial render
   useEffect(() => {
-    socket.on("message", (data: Message) => {
-      console.log("Received message:", data)
-      setMessages(prev => [...prev, {
-        ...data,
-        timestamp: new Date(data.timestamp || Date.now())
-      }])
-    })
-
-    // Load previous messages
-    socket.emit("get_messages", { room: groupId }, (response: Message[]) => {
-      if (response && Array.isArray(response)) {
-        setMessages(response.map(msg => ({
-          ...msg,
-          timestamp: new Date(msg.timestamp || Date.now())
-        })))
+    const storedMessages = localStorage.getItem(`chat-messages-${groupId}`)
+    if (storedMessages) {
+      try {
+        setMessages(JSON.parse(storedMessages))
+      } catch (error) {
+        console.error("Error parsing stored messages:", error)
       }
-    })
+    }
+  }, [groupId])
 
-    // Cleanup function
+  useEffect(() => {
+    // Handle receiving messages
+    function onNewMessage(message: ChatMessage) {
+      setMessages(prev => {
+        const newMessages = [...prev, message]
+        // Save to local storage
+        localStorage.setItem(`chat-messages-${groupId}`, JSON.stringify(newMessages))
+        return newMessages
+      })
+    }
+
+    // Handle receiving initial messages
+    function onFetchMessages(messages: ChatMessage[]) {
+      setMessages(messages)
+      // Save to local storage
+      localStorage.setItem(`chat-messages-${groupId}`, JSON.stringify(messages))
+    }
+
+    // Register socket event listeners
+    socket.on("new_message", onNewMessage)
+    socket.on("fetch_messages", onFetchMessages)
+
+    // Clean up on unmount
     return () => {
-      socket.off("message")
-      socket.close()
+      socket.off("new_message", onNewMessage)
+      socket.off("fetch_messages", onFetchMessages)
     }
   }, [socket, groupId])
 
-  // Auto-scroll to bottom when new messages arrive
+  // Scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
 
-  // Send a message
-  const sendMessage = () => {
-    if (!inputMessage.trim() || !session?.user) return
+  const handleSendMessage = () => {
+    if (!messageText.trim() || !session?.user) return
 
-    const messageData = {
-      sender: session.user.name || "Anonymous",
-      senderEmail: session.user.email || "anonymous@example.com",
-      message: inputMessage,
-      avatar: session.user.image || undefined,
+    // Get user information
+    const userEmail = session.user.email || 'unknown@example.com'
+
+
+    // Create message to send
+    const message = {
+      message: messageText,
       room: groupId,
-      timestamp: new Date()
+      sender: session.user.id as string,
+      user: {
+        email: userEmail,
+        avatar: session.user.avatar
+      }
     }
 
-    socket.emit("message", messageData)
-    setInputMessage("")
+    // Send message
+    socket.emit("send_message", message)
+    setMessageText("")
   }
 
-  // Handle Enter key press
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault()
-      sendMessage()
+      handleSendMessage()
     }
+  }
+
+  // Get initials from name or email
+  const getInitials = (name: string, email: string) => {
+    if (name && name.length > 0) {
+      return name.charAt(0).toUpperCase()
+    }
+    if (email && email.length > 0) {
+      return email.charAt(0).toUpperCase()
+    }
+    return 'U'
   }
 
   return (
-    <div className="flex flex-col h-full max-h-[calc(100vh-120px)] w-full">
-      {/* Messages container with overflow */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+    <div className="flex flex-col h-full">
+      {/* Messages area */}
+      <div className="flex-1 overflow-y-auto p-4">
         {messages.length === 0 ? (
-          <div className="flex items-center justify-center h-full">
-            <p className="text-muted-foreground">No messages yet. Start a conversation!</p>
+          <div className="flex items-center justify-center h-full text-gray-400">
+            No messages yet. Start a conversation!
           </div>
         ) : (
-          messages.map((msg, index) => {
-            const isCurrentUser = msg.senderEmail === session?.user?.email
-            
-            return (
-              <ChatBubble
-                key={msg.id || index}
-                variant={isCurrentUser ? "sent" : "received"}
-                className={isCurrentUser ? "justify-end" : "justify-start"}
-              >
-                {!isCurrentUser && (
-                  <ChatBubbleAvatar 
-                    src={msg.avatar}
-                    fallback={msg.senderEmail?.[0]?.toUpperCase() || "U"}
-                  />
-                )}
-                
-                <div className={`flex flex-col ${isCurrentUser ? "items-end" : "items-start"}`}>
-                  <span className="text-xs text-muted-foreground mb-1">
-                    {!isCurrentUser && `${msg.senderEmail} • `}
-                    {format(new Date(msg.timestamp), "h:mm a")}
-                  </span>
-                  
-                  <ChatBubbleMessage variant={isCurrentUser ? "sent" : "received"}>
-                    {msg.message}
-                  </ChatBubbleMessage>
-                </div>
-                
-                {isCurrentUser && (
-                  <ChatBubbleAvatar 
-                    src={session?.user?.image || undefined}
-                    fallback={session?.user?.email?.[0]?.toUpperCase() || "U"}
-                  />
-                )}
-              </ChatBubble>
-            )
-          })
+          <div className="space-y-4">
+            {messages.map((message) => {
+              const isOwn = message.sender === (session?.user?.id as string)
+              return (
+                <ChatBubble 
+                  key={message.id} 
+                  variant={isOwn ? "sent" : "received"}
+                >
+                  {!isOwn && (
+                    <ChatBubbleAvatar 
+                      src={message.user.avatar || "/avatar.png"} 
+                      fallback={message.user.email.charAt(0).toUpperCase()}
+                    />
+                  )}
+                  <div className="flex flex-col">
+                    {!isOwn && (
+                      <span className="text-xs text-gray-500 mb-1 ml-1">
+                        {message.user.email}
+                      </span>
+                    )}
+                    <ChatBubbleMessage variant={isOwn ? "sent" : "received"}>
+                      {message.message}
+                    </ChatBubbleMessage>
+                  </div>
+                </ChatBubble>
+              )
+            })}
+            <div ref={messagesEndRef} />
+          </div>
         )}
-        <div ref={messagesEndRef} />
       </div>
-      
-      {/* Input area */}
-      <div className="border-t p-4 bg-background">
-        <div className="flex items-center gap-2">
+
+      {/* Message input */}
+      <div className="border-t p-4">
+        <div className="flex gap-2">
           <ChatInput
-            value={inputMessage}
-            onChange={(e) => setInputMessage(e.target.value)}
-            onKeyDown={handleKeyPress}
+            value={messageText}
+            onChange={(e) => setMessageText(e.target.value)}
+            onKeyDown={handleKeyDown}
             placeholder="Type a message..."
+            className="flex-1"
           />
           <Button 
-            type="submit" 
-            size="icon"
-            onClick={sendMessage}
-            disabled={!inputMessage.trim()}
+            onClick={handleSendMessage} 
+            size="icon" 
+            disabled={!messageText.trim()}
           >
             <Send className="h-4 w-4" />
           </Button>
