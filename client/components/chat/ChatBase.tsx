@@ -11,12 +11,14 @@ import {
 import { ChatInput } from "@/components/ui/chat-input"
 import { Button } from "@/components/ui/button"
 import { Send } from "lucide-react"
+import { format } from "date-fns"
 
 interface ChatMessage {
   id: string
   sender: string
   message: string
   room: string
+  createdAt: string // ISO string date
   user: {
     email: string
     avatar?: string
@@ -31,54 +33,30 @@ export default function ChatBase({ groupId }: { groupId: string }) {
 
   const socket = useMemo(() => {
     const socket = getSocket()
-    socket.auth = {
-      room: groupId
-    }
+    socket.auth = { room: groupId }
     return socket.connect()
   }, [groupId])
 
-  // Load messages from local storage on initial render
   useEffect(() => {
-    const storedMessages = localStorage.getItem(`chat-messages-${groupId}`)
-    if (storedMessages) {
-      try {
-        setMessages(JSON.parse(storedMessages))
-      } catch (error) {
-        console.error("Error parsing stored messages:", error)
-      }
-    }
-  }, [groupId])
-
-  useEffect(() => {
-    // Handle receiving messages
+    // When receiving a new message, append it to the list.
     function onNewMessage(message: ChatMessage) {
-      setMessages(prev => {
-        const newMessages = [...prev, message]
-        // Save to local storage
-        localStorage.setItem(`chat-messages-${groupId}`, JSON.stringify(newMessages))
-        return newMessages
-      })
+      setMessages(prev => [...prev, message])
     }
 
-    // Handle receiving initial messages
-    function onFetchMessages(messages: ChatMessage[]) {
-      setMessages(messages)
-      // Save to local storage
-      localStorage.setItem(`chat-messages-${groupId}`, JSON.stringify(messages))
+    // When initially fetching messages, set them in state.
+    function onFetchMessages(fetchedMessages: ChatMessage[]) {
+      setMessages(fetchedMessages)
     }
 
-    // Register socket event listeners
     socket.on("new_message", onNewMessage)
     socket.on("fetch_messages", onFetchMessages)
 
-    // Clean up on unmount
     return () => {
       socket.off("new_message", onNewMessage)
       socket.off("fetch_messages", onFetchMessages)
     }
   }, [socket, groupId])
 
-  // Scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
@@ -86,11 +64,8 @@ export default function ChatBase({ groupId }: { groupId: string }) {
   const handleSendMessage = () => {
     if (!messageText.trim() || !session?.user) return
 
-    // Get user information
     const userEmail = session.user.email || 'unknown@example.com'
 
-
-    // Create message to send
     const message = {
       message: messageText,
       room: groupId,
@@ -98,10 +73,10 @@ export default function ChatBase({ groupId }: { groupId: string }) {
       user: {
         email: userEmail,
         avatar: session.user.avatar
-      }
+      },
+      createdAt: new Date().toISOString()
     }
 
-    // Send message
     socket.emit("send_message", message)
     setMessageText("")
   }
@@ -113,20 +88,16 @@ export default function ChatBase({ groupId }: { groupId: string }) {
     }
   }
 
-  // Get initials from name or email
-  const getInitials = (name: string, email: string) => {
-    if (name && name.length > 0) {
-      return name.charAt(0).toUpperCase()
-    }
-    if (email && email.length > 0) {
-      return email.charAt(0).toUpperCase()
-    }
-    return 'U'
-  }
+  // Format message timestamp - simplified version
+  const formatMessageTime = (timestamp?: string) => {
+    if (!timestamp) return "";
+    const date = new Date(timestamp);
+    return format(date, "MMM d, h:mm a");
+  };
 
   return (
     <div className="flex flex-col h-full">
-      {/* Messages area */}
+      {/* Chat messages display */}
       <div className="flex-1 overflow-y-auto p-4">
         {messages.length === 0 ? (
           <div className="flex items-center justify-center h-full text-gray-400">
@@ -156,6 +127,9 @@ export default function ChatBase({ groupId }: { groupId: string }) {
                     <ChatBubbleMessage variant={isOwn ? "sent" : "received"}>
                       {message.message}
                     </ChatBubbleMessage>
+                    <span className={`text-xs text-gray-400 mt-1 ${isOwn ? "self-end" : "self-start"}`}>
+                      {formatMessageTime(message.createdAt)}
+                    </span>
                   </div>
                 </ChatBubble>
               )
@@ -165,7 +139,7 @@ export default function ChatBase({ groupId }: { groupId: string }) {
         )}
       </div>
 
-      {/* Message input */}
+      {/* Chat input area */}
       <div className="border-t p-4">
         <div className="flex gap-2">
           <ChatInput

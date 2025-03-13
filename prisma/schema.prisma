@@ -46,29 +46,46 @@ model VerificationToken {
 }
 
 model User {
-  id            String      @id @default(uuid()) @db.Uuid
-  email         String?     @unique @db.VarChar(100)
-  password      String?     @db.VarChar(100)
+  id            String       @id @default(uuid()) @db.Uuid
+  email         String?      @unique @db.VarChar(100)
+  password      String?      @db.VarChar(100)
   avatar        String?
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
   emailVerified DateTime?
   image         String?
   name          String?
   accounts      Account[]
   ChatGroup     ChatGroup[]
+  ChatMessage   ChatMessage[]
   sessions      Session[]
 
   @@map("users")
 }
 
 model ChatGroup {
-  id         String       @id @default(uuid()) @db.Uuid
-  userId     String       @db.Uuid
-  title      String       @db.VarChar(100)
-  createdAt  DateTime     @default(now())
-  updatedAt  DateTime     @updatedAt
-  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id          String        @id @default(uuid()) @db.Uuid
+  userId      String        @db.Uuid
+  title       String        @db.VarChar(100)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ChatMessage ChatMessage[]
 
   @@map("chat_groups")
+}
+
+model ChatMessage {
+  id           String    @id @default(uuid()) @db.Uuid
+  chatGroupId  String    @db.Uuid
+  sender       String
+  message      String
+  userId       String    @db.Uuid
+  userEmail    String
+  userAvatar   String?
+  createdAt    DateTime  @default(now())
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chatGroup    ChatGroup @relation(fields: [chatGroupId], references: [id], onDelete: Cascade)
+
+  @@map("chat_messages")
 }
