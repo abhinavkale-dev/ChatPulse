@@ -59,8 +59,8 @@ export default function ProfilePage() {
           <div className="mt-8 flex justify-center">
             <Button
               onClick={() => signOut({ callbackUrl: "/" })}
-              variant="destructive"
-              className="w-full max-w-[200px]"
+              variant="outline"
+              className="w-full max-w-[200px] border-red-500 hover:bg-red-500 hover:text-white text-white bg-red-500/80"
             >
               Sign out
             </Button>
