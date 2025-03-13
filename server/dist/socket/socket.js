@@ -104,17 +104,21 @@ function setupSocket(io) {
         // Handle fetching messages on demand
         socket.on("fetch_messages", (data, callback) => {
             const cacheKey = `chat:${data.room}:messages`;
+            console.log(`Fetching messages for room: ${data.room}`); // Debug log
             redis_1.default.get(cacheKey)
                 .then((cachedMessages) => __awaiter(this, void 0, void 0, function* () {
                 if (cachedMessages) {
+                    console.log(`Retrieved ${JSON.parse(cachedMessages).length} cached messages for room: ${data.room}`); // Debug log
                     callback(JSON.parse(cachedMessages));
                 }
                 else {
                     try {
+                        console.log(`Cache miss, querying DB for room: ${data.room}`); // Debug log
                         const messagesFromDB = yield prisma_server_1.default.chatMessage.findMany({
                             where: { chatGroupId: data.room },
                             orderBy: { createdAt: "asc" },
                         });
+                        console.log(`Found ${messagesFromDB.length} messages in DB for room: ${data.room}`); // Debug log
                         const formattedMessages = messagesFromDB.map((msg) => ({
                             id: msg.id,
                             sender: msg.sender,
@@ -236,6 +240,7 @@ function setupSocket(io) {
                         // createdAt is automatically set by Prisma
                     },
                 });
+                console.log(`Saved message to DB with ID ${savedMessage.id} for room ${savedMessage.chatGroupId}`); // Debug log
                 const formattedMessage = {
                     id: savedMessage.id,
                     sender: savedMessage.sender,

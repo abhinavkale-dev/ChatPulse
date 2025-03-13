@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button"
 import { Send } from "lucide-react"
 import { format } from "date-fns"
 import { toast } from "sonner"
+import { cn } from "@/lib/utils"
 
 interface ChatMessage {
   id: string
@@ -31,6 +32,7 @@ export default function ChatBase({ groupId }: { groupId: string }) {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [messageText, setMessageText] = useState("")
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const MAX_MESSAGE_LENGTH = 500
 
   const socket = useMemo(() => {
     const socket = getSocket()
@@ -91,8 +93,17 @@ export default function ChatBase({ groupId }: { groupId: string }) {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
 
+  const handleMessageChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value
+    // Limit input to 500 characters
+    if (value.length <= MAX_MESSAGE_LENGTH) {
+      setMessageText(value)
+    }
+  }
+
   const handleSendMessage = () => {
     if (!messageText.trim() || !session?.user) return
+    if (messageText.length > MAX_MESSAGE_LENGTH) return
 
     const userEmail = session.user.email || 'unknown@example.com'
 
@@ -107,6 +118,7 @@ export default function ChatBase({ groupId }: { groupId: string }) {
       createdAt: new Date().toISOString()
     }
 
+    console.log(`Sending message to room: ${groupId}`)
     socket.emit("send_message", message)
     setMessageText("")
   }
@@ -134,7 +146,7 @@ export default function ChatBase({ groupId }: { groupId: string }) {
             No messages yet. Start a conversation!
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-4 max-w-full">
             {messages.map((message) => {
               const isOwn = message.sender === (session?.user?.id as string)
               return (
@@ -148,12 +160,16 @@ export default function ChatBase({ groupId }: { groupId: string }) {
                       fallback={message.user.email.charAt(0).toUpperCase()}
                     />
                   )}
-                  <div className="flex flex-col">
-                    {!isOwn && (
-                      <span className="text-xs text-gray-500 mb-1 ml-1">
-                        {message.user.email}
-                      </span>
-                    )}
+                  <div className={cn(
+                    "flex flex-col max-w-full",
+                    isOwn && "items-end"
+                  )}>
+                    <span className={cn(
+                      "text-xs text-gray-500 mb-1",
+                      isOwn ? "mr-1" : "ml-1"
+                    )}>
+                      {message.user.email}
+                    </span>
                     <ChatBubbleMessage variant={isOwn ? "sent" : "received"}>
                       {message.message}
                     </ChatBubbleMessage>
@@ -171,21 +187,27 @@ export default function ChatBase({ groupId }: { groupId: string }) {
 
       {/* Chat input area */}
       <div className="border-t p-4">
-        <div className="flex gap-2">
-          <ChatInput
-            value={messageText}
-            onChange={(e) => setMessageText(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Type a message..."
-            className="flex-1"
-          />
-          <Button 
-            onClick={handleSendMessage} 
-            size="icon" 
-            disabled={!messageText.trim()}
-          >
-            <Send className="h-4 w-4" />
-          </Button>
+        <div className="flex flex-col gap-1">
+          <div className="flex gap-2">
+            <ChatInput
+              value={messageText}
+              onChange={handleMessageChange}
+              onKeyDown={handleKeyDown}
+              placeholder="Type a message..."
+              className="flex-1"
+              maxLength={MAX_MESSAGE_LENGTH}
+            />
+            <Button 
+              onClick={handleSendMessage} 
+              size="icon" 
+              disabled={!messageText.trim() || messageText.length > MAX_MESSAGE_LENGTH}
+            >
+              <Send className="h-4 w-4" />
+            </Button>
+          </div>
+          <div className="text-xs text-gray-500 text-right">
+            {messageText.length}/{MAX_MESSAGE_LENGTH}
+          </div>
         </div>
       </div>
     </div>
