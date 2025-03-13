@@ -198,11 +198,11 @@ export default function ChatBase({ groupId }: { groupId: string }) {
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full overflow-x-hidden">
       {/* Chat messages display */}
-      <div className="flex-1 overflow-y-auto p-4">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden p-4">
         {messages.length === 0 ? (
-          <div className="flex items-center justify-center h-full text-gray-400">
+          <div className="flex items-center justify-center h-full text-muted-foreground">
             No messages yet. Start a conversation!
           </div>
         ) : (
@@ -225,7 +225,7 @@ export default function ChatBase({ groupId }: { groupId: string }) {
                     isOwn && "items-end"
                   )}>
                     <span className={cn(
-                      "text-xs text-gray-500 mb-1",
+                      "text-xs text-muted-foreground mb-1",
                       isOwn ? "mr-1" : "ml-1"
                     )}>
                       {message.user.email}
@@ -233,7 +233,7 @@ export default function ChatBase({ groupId }: { groupId: string }) {
                     <ChatBubbleMessage variant={isOwn ? "sent" : "received"}>
                       {message.message}
                     </ChatBubbleMessage>
-                    <span className={`text-xs text-gray-400 mt-1 ${isOwn ? "self-end" : "self-start"}`}>
+                    <span className={`text-xs text-muted-foreground mt-1 ${isOwn ? "self-end" : "self-start"}`}>
                       {formatMessageTime(message.createdAt)}
                     </span>
                   </div>
@@ -246,7 +246,7 @@ export default function ChatBase({ groupId }: { groupId: string }) {
       </div>
 
       {/* Chat input area */}
-      <div className="border-t p-4">
+      <div className="border-t border-border p-4">
         <div className="flex flex-col gap-1">
           <div className="flex gap-2">
             <ChatInput
@@ -265,7 +265,7 @@ export default function ChatBase({ groupId }: { groupId: string }) {
               <Send className="h-4 w-4" />
             </Button>
           </div>
-          <div className="text-xs text-gray-500 text-right">
+          <div className="text-xs text-muted-foreground text-right">
             {messageText.length}/{MAX_MESSAGE_LENGTH}
           </div>
         </div>

@@ -48,8 +48,8 @@ export function ChatBubbleMessage({
       className={cn(
         "rounded-lg p-3 max-w-[75%] break-words whitespace-pre-wrap",
         variant === "sent" 
-          ? "bg-primary text-primary-foreground ml-auto" 
-          : "bg-muted mr-auto",
+          ? "bg-muted text-foreground ml-auto" 
+          : "bg-muted text-foreground mr-auto",
         className
       )}
     >

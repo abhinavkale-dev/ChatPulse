@@ -48,27 +48,27 @@ export default function HomeLayout({ children }: { children: React.ReactNode }) 
       label: "All Users",
       href: "/all-users",
       icon: (
-        <UserRoundSearch className="text-neutral-700 dark:text-neutral-200 h-6 w-6 flex-shrink-0" />
+        <UserRoundSearch className="text-sidebar-foreground h-6 w-6 flex-shrink-0" />
       ),
     },
     {
       label: "Settings",
       href: "/settings",
       icon: (
-        <Settings className="text-neutral-700 dark:text-neutral-200 h-6 w-6 flex-shrink-0" />
+        <Settings className="text-sidebar-foreground h-6 w-6 flex-shrink-0" />
       ),
     },
     {
       label: "Logout",
       onClick: handleLogout,
       icon: (
-        <LogOut className="text-neutral-700 dark:text-neutral-200 h-6 w-6 flex-shrink-0" />
+        <LogOut className="text-sidebar-foreground h-6 w-6 flex-shrink-0" />
       ),
     },
   ];
 
   return (
-    <div className="flex flex-col md:flex-row h-screen w-full overflow-hidden bg-gray-50 dark:bg-neutral-900">
+    <div className="flex flex-col md:flex-row h-screen w-full overflow-hidden bg-background">
       <Sidebar open={open} setOpen={setOpen}>
         <SidebarBody className="justify-between gap-10">
           <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
@@ -120,13 +120,13 @@ const Logo = () => {
   return (
     <Link
       href="#"
-      className="font-normal flex space-x-2 items-center text-sm text-black py-1 relative z-20"
+      className="font-normal flex space-x-2 items-center text-sm text-sidebar-foreground py-1 relative z-20"
     >
-      <div className="h-5 w-6 bg-black dark:bg-white rounded-br-lg rounded-tr-sm rounded-tl-lg rounded-bl-sm flex-shrink-0" />
+      <div className="h-5 w-6 bg-primary dark:bg-primary rounded-br-lg rounded-tr-sm rounded-tl-lg rounded-bl-sm flex-shrink-0" />
       <motion.span
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="font-medium text-black dark:text-white whitespace-pre"
+        className="font-medium text-sidebar-foreground whitespace-pre"
       >
         Acet Labs
       </motion.span>
@@ -138,9 +138,9 @@ const LogoIcon = () => {
   return (
     <Link
       href="#"
-      className="font-normal flex space-x-2 items-center text-sm text-black py-1 relative z-20"
+      className="font-normal flex space-x-2 items-center text-sm text-sidebar-foreground py-1 relative z-20"
     >
-      <div className="h-5 w-6 bg-black dark:bg-white rounded-br-lg rounded-tr-sm rounded-tl-lg rounded-bl-sm flex-shrink-0" />
+      <div className="h-5 w-6 bg-primary dark:bg-primary rounded-br-lg rounded-tr-sm rounded-tl-lg rounded-bl-sm flex-shrink-0" />
     </Link>
   );
 };

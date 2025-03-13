@@ -24,7 +24,7 @@ import type { z } from "zod";
 
 export default function SigninPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#030303] px-4 py-12">
+    <div className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
       <Signin />
     </div>
   );
@@ -44,7 +44,6 @@ function Signin() {
 
   useEffect(() => {
     if (status === 'authenticated') {
-      // Let the home layout handle the welcome toast
       router.replace('/home');
     }
   }, [status, router]);
@@ -72,7 +71,6 @@ function Signin() {
         });
         console.error("Sign in error:", result.error);
       } else {
-        // Let the home layout handle the success toast
         router.push("/home");
       }
     } catch (error) {
@@ -92,12 +90,12 @@ function Signin() {
   };
 
   return (
-    <div className="w-full max-w-md space-y-8 rounded-xl border border-white/[0.08] bg-white/[0.02] p-6 backdrop-blur-sm">
+    <div className="w-full max-w-md space-y-8 rounded-xl border border-border bg-card/20 p-6 backdrop-blur-sm">
       <div className="text-center">
-        <h2 className="text-3xl font-bold tracking-tight text-white">
+        <h2 className="text-3xl font-bold tracking-tight text-foreground">
           Sign in to your account
         </h2>
-        <p className="mt-2 text-sm text-white/60">
+        <p className="mt-2 text-sm text-muted-foreground">
           Welcome back to Chat Pulse
         </p>
       </div>
@@ -109,11 +107,11 @@ function Signin() {
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-white/80">Email</FormLabel>
+                <FormLabel className="text-foreground">Email</FormLabel>
                 <FormControl>
                   <Input
                     placeholder="Email"
-                    className="bg-white/5 border-white/10 text-white"
+                    className="bg-background/50 border-border text-foreground"
                     {...field}
                   />
                 </FormControl>
@@ -126,12 +124,12 @@ function Signin() {
             name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-white/80">Password</FormLabel>
+                <FormLabel className="text-foreground">Password</FormLabel>
                 <FormControl>
                   <Input
                     placeholder="Password"
                     type="password"
-                    className="bg-white/5 border-white/10 text-white"
+                    className="bg-background/50 border-border text-foreground"
                     {...field}
                   />
                 </FormControl>
@@ -159,22 +157,22 @@ function Signin() {
 
       <div className="relative">
         <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-white/[0.08]"></div>
+          <div className="w-full border-t border-border"></div>
         </div>
         <div className="relative flex justify-center text-xs">
-          <span className="bg-[#030303] px-2 text-white/60">Or continue with</span>
+          <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
         </div>
       </div>
 
       <Button
         onClick={handleGoogleSignin}
-        className="w-full flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 text-white border border-white/10"
+        className="w-full flex items-center justify-center gap-2 bg-background/50 hover:bg-background/80 text-foreground border border-border"
       >
         <FcGoogle className="h-5 w-5" />
         <span>Google</span>
       </Button>
 
-      <div className="text-center text-sm text-white/60">
+      <div className="text-center text-sm text-muted-foreground">
         Don&apos;t have an account?{" "}
         <Link href="/signup" className="font-medium text-indigo-400 hover:text-indigo-300">
           Sign up
