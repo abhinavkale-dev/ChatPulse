@@ -31,24 +31,73 @@ export default function ChatBase({ groupId }: { groupId: string }) {
   const { data: session } = useSession()
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [messageText, setMessageText] = useState("")
+  const [isConnected, setIsConnected] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const MAX_MESSAGE_LENGTH = 500
 
+  // Use a ref to track if messages have been loaded
+  const messagesLoaded = useRef(false)
+
   const socket = useMemo(() => {
+    console.log(`Creating socket for room: ${groupId}`)
     const socket = getSocket()
     socket.auth = { room: groupId }
-    return socket.connect()
+    return socket
   }, [groupId])
 
+  // Handle socket connection
+  useEffect(() => {
+    if (!socket.connected) {
+      console.log("Connecting socket...")
+      socket.connect()
+    }
+
+    function onConnect() {
+      console.log("Socket connected!")
+      setIsConnected(true)
+    }
+
+    function onDisconnect() {
+      console.log("Socket disconnected!")
+      setIsConnected(false)
+    }
+
+    socket.on("connect", onConnect)
+    socket.on("disconnect", onDisconnect)
+
+    return () => {
+      socket.off("connect", onConnect)
+      socket.off("disconnect", onDisconnect)
+    }
+  }, [socket])
+
+  // Handle message loading once connected
+  useEffect(() => {
+    if (isConnected && !messagesLoaded.current) {
+      console.log("Explicitly requesting messages from server")
+      socket.emit("fetch_messages", { room: groupId }, (fetchedMessages: ChatMessage[]) => {
+        console.log(`Received ${fetchedMessages.length} messages from callback`)
+        setMessages(fetchedMessages)
+        messagesLoaded.current = true
+      })
+    }
+  }, [isConnected, groupId, socket])
+
+  // Handle socket events
   useEffect(() => {
     // When receiving a new message, append it to the list.
     function onNewMessage(message: ChatMessage) {
+      console.log(`Received new message: ${message.id}`)
       setMessages(prev => [...prev, message])
     }
 
     // When initially fetching messages, set them in state.
     function onFetchMessages(fetchedMessages: ChatMessage[]) {
-      setMessages(fetchedMessages)
+      console.log(`Received ${fetchedMessages.length} messages from event`)
+      if (!messagesLoaded.current) {
+        setMessages(fetchedMessages)
+        messagesLoaded.current = true
+      }
     }
 
     // Handle rate limiting and other errors
@@ -88,6 +137,17 @@ export default function ChatBase({ groupId }: { groupId: string }) {
       socket.off("moderation_event", onModerationEvent)
     }
   }, [socket, groupId])
+
+  // Clean up on component unmount
+  useEffect(() => {
+    return () => {
+      messagesLoaded.current = false
+      if (socket.connected) {
+        console.log("Disconnecting socket on cleanup")
+        socket.disconnect()
+      }
+    }
+  }, [socket])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
