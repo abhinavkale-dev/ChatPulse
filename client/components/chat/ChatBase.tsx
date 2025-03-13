@@ -12,6 +12,7 @@ import { ChatInput } from "@/components/ui/chat-input"
 import { Button } from "@/components/ui/button"
 import { Send } from "lucide-react"
 import { format } from "date-fns"
+import { toast } from "sonner"
 
 interface ChatMessage {
   id: string
@@ -48,12 +49,41 @@ export default function ChatBase({ groupId }: { groupId: string }) {
       setMessages(fetchedMessages)
     }
 
+    // Handle rate limiting and other errors
+    function onError(error: { type: string; message: string; retryAfter?: number }) {
+      if (error.type === "RATE_LIMIT_EXCEEDED") {
+        toast.error(error.message, {
+          duration: 5000,
+          icon: "🚫",
+        });
+      } else {
+        // Handle other types of errors
+        toast.error("An error occurred", {
+          description: error.message,
+        });
+      }
+    }
+
+    // Handle moderation events such as when users are rate-limited
+    function onModerationEvent(event: { type: string; user: string; message: string }) {
+      if (event.type === "USER_RATE_LIMITED") {
+        toast.info("Moderation Notice", {
+          description: event.message,
+          duration: 3000,
+        });
+      }
+    }
+
     socket.on("new_message", onNewMessage)
     socket.on("fetch_messages", onFetchMessages)
+    socket.on("error", onError)
+    socket.on("moderation_event", onModerationEvent)
 
     return () => {
       socket.off("new_message", onNewMessage)
       socket.off("fetch_messages", onFetchMessages)
+      socket.off("error", onError)
+      socket.off("moderation_event", onModerationEvent)
     }
   }, [socket, groupId])
 

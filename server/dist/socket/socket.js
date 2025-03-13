@@ -16,6 +16,14 @@ exports.setupSocket = setupSocket;
 const prisma_server_1 = __importDefault(require("../lib/prisma.server")); // Adjust the import path as needed
 const redis_1 = __importDefault(require("../redis/redis")); // Using your existing redis.ts file
 const CACHE_EXPIRY = 60 * 60 * 24; // 24 hours in seconds
+// Rate limiting configuration
+const RATE_LIMIT = {
+    MAX_MESSAGES: 10, // Maximum messages allowed in the time window
+    TIME_WINDOW: 60, // Time window in seconds (1 minute)
+    BLOCK_DURATION: 60 // How long to block a user after exceeding the limit (in seconds)
+};
+// Track rate-limited users
+const rateLimitedUsers = new Map(); // key: userEmail:roomId, value: timestamp when limit expires
 function setupSocket(io) {
     io.use((socket, next) => {
         const room = socket.handshake.auth.room;
@@ -163,6 +171,52 @@ function setupSocket(io) {
                 avatar: data.user.avatar || "",
             };
             try {
+                // Create a unique identifier for this user in this room
+                const rateLimitKey = `ratelimit:${userInfo.email}:${data.room}`;
+                const rateLimitedKey = `${userInfo.email}:${data.room}`;
+                // Check if user is currently in a rate-limited state
+                const currentTime = Math.floor(Date.now() / 1000);
+                const limitExpireTime = rateLimitedUsers.get(rateLimitedKey);
+                if (limitExpireTime && currentTime < limitExpireTime) {
+                    // User is still rate-limited
+                    const timeRemaining = limitExpireTime - currentTime;
+                    socket.emit("error", {
+                        type: "RATE_LIMIT_EXCEEDED",
+                        message: `You're sending messages too quickly. Please wait ${timeRemaining} seconds before trying again.`,
+                        retryAfter: timeRemaining
+                    });
+                    return; // Don't process the message
+                }
+                // Check rate limit before processing the message
+                const userMessageCount = yield redis_1.default.incr(rateLimitKey);
+                // Set expiry on first message
+                if (userMessageCount === 1) {
+                    yield redis_1.default.expire(rateLimitKey, RATE_LIMIT.TIME_WINDOW);
+                }
+                // Check if user has exceeded rate limit
+                if (userMessageCount > RATE_LIMIT.MAX_MESSAGES) {
+                    console.log(`Rate limit exceeded for user ${userInfo.email} in room ${data.room}`);
+                    // Add user to rate-limited map with expiry time
+                    const expireTime = currentTime + RATE_LIMIT.BLOCK_DURATION;
+                    rateLimitedUsers.set(rateLimitedKey, expireTime);
+                    // Schedule removal from rate-limited map
+                    setTimeout(() => {
+                        rateLimitedUsers.delete(rateLimitedKey);
+                    }, RATE_LIMIT.BLOCK_DURATION * 1000);
+                    // Emit rate limit error to the spamming user only
+                    socket.emit("error", {
+                        type: "RATE_LIMIT_EXCEEDED",
+                        message: `You're sending messages too quickly. Please wait ${RATE_LIMIT.BLOCK_DURATION} seconds before trying again.`,
+                        retryAfter: RATE_LIMIT.BLOCK_DURATION
+                    });
+                    // Notify room moderators or administrators (optional)
+                    socket.to(data.room).emit("moderation_event", {
+                        type: "USER_RATE_LIMITED",
+                        user: userInfo.email,
+                        message: `${userInfo.email} has been temporarily rate-limited for sending too many messages.`
+                    });
+                    return; // Don't process the message
+                }
                 // Find the user by email to get their valid UUID
                 const user = yield prisma_server_1.default.user.findUnique({
                     where: { email: userInfo.email }

@@ -10,8 +10,8 @@ export default function Chat() {
   return (
     <div className="flex flex-col h-screen bg-gray-100">
       <header className="bg-white border-b shadow-sm p-4">
-        <h1 className="text-xl font-bold text-gray-800">🚀 This is a temporary chat room 🚀</h1>
-        <h1 className="text-sm font-bold text-gray-800">(Can't afford to buy a db storage for this)</h1>
+        <h1 className="text-xl font-bold text-gray-800">Be Respectful</h1>
+        <h1 className="text-sm font-bold text-gray-800">(Don't spam)</h1>
       </header>
       <main className="flex-1 overflow-hidden">
         <ChatBase groupId={id} />
