@@ -26,7 +26,13 @@ interface ChatGroup {
 }
 
 function Home() {
-  const { data: session } = useSession()
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { data: _session } = useSession({
+    required: true,
+    onUnauthenticated() {
+      window.location.href = '/signin';
+    },
+  })
   const [rooms, setRooms] = useState<ChatGroup[]>([])
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)

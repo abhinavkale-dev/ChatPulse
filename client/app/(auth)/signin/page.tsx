@@ -30,10 +30,10 @@ export default function SigninPage() {
   );
 }
 
-export function Signin() {
+function Signin() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const form = useForm<z.infer<typeof signInSchema>>({
     resolver: zodResolver(signInSchema),
     defaultValues: {
@@ -175,7 +175,7 @@ export function Signin() {
       </Button>
 
       <div className="text-center text-sm text-white/60">
-        Don't have an account?{" "}
+        Don&apos;t have an account?{" "}
         <Link href="/signup" className="font-medium text-indigo-400 hover:text-indigo-300">
           Sign up
         </Link>
