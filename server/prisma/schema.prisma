@@ -1,0 +1,91 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String  @db.Uuid
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String   @db.Uuid
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+model User {
+  id            String       @id @default(uuid()) @db.Uuid
+  email         String?      @unique @db.VarChar(100)
+  password      String?      @db.VarChar(100)
+  avatar        String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  emailVerified DateTime?
+  image         String?
+  name          String?
+  accounts      Account[]
+  ChatGroup     ChatGroup[]
+  ChatMessage   ChatMessage[]
+  sessions      Session[]
+
+  @@map("users")
+}
+
+model ChatGroup {
+  id          String        @id @default(uuid()) @db.Uuid
+  userId      String        @db.Uuid
+  title       String        @db.VarChar(100)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ChatMessage ChatMessage[]
+
+  @@map("chat_groups")
+}
+
+model ChatMessage {
+  id           String    @id @default(uuid()) @db.Uuid
+  chatGroupId  String    @db.Uuid
+  sender       String
+  message      String
+  userId       String    @db.Uuid
+  userEmail    String
+  userAvatar   String?
+  createdAt    DateTime  @default(now())
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chatGroup    ChatGroup @relation(fields: [chatGroupId], references: [id], onDelete: Cascade)
+
+  @@map("chat_messages")
+}

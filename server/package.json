@@ -5,6 +5,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon --watch src --exec \"tsc && node dist/index.js\"",
+    "build": "tsc",
+    "start": "node dist/index.js",
     "prisma:generate": "prisma generate --schema=../prisma/schema.prisma",
     "prisma:studio": "prisma studio --schema=../prisma/schema.prisma"
   },
