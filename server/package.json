@@ -17,10 +17,12 @@
     "@socket.io/admin-ui": "^0.5.1",
     "@socket.io/redis-streams-adapter": "^0.2.2",
     "@types/express": "^5.0.0",
+    "@types/node-cron": "^3.0.11",
     "express": "^4.21.2",
     "http": "^0.0.1-security",
     "ioredis": "^5.5.0",
     "nanoid": "^5.1.3",
+    "node-cron": "^3.0.3",
     "prisma": "^6.4.1",
     "socket.io": "^4.8.1"
   }

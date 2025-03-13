@@ -12,6 +12,7 @@ const socket_1 = require("./socket/socket");
 const redis_streams_adapter_1 = require("@socket.io/redis-streams-adapter");
 const redis_1 = __importDefault(require("./redis/redis"));
 const admin_ui_1 = require("@socket.io/admin-ui");
+const cleanup_1 = require("./cleanup");
 const port = 8080;
 const app = (0, express_1.default)();
 const server = (0, http_1.createServer)(app);
@@ -29,6 +30,8 @@ app.use((0, cors_1.default)());
     auth: false,
     mode: "development"
 });
+// Initialize the database cleanup cron job
+(0, cleanup_1.setupCleanupJob)();
 server.listen(port, () => {
     console.log(`Server is running on port ${port}`);
 });

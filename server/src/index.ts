@@ -6,6 +6,7 @@ import { setupSocket } from "./socket/socket"
 import { createAdapter } from "@socket.io/redis-streams-adapter";
 import redis from "./redis/redis"
 import {instrument} from "@socket.io/admin-ui"
+import { setupCleanupJob } from "./cleanup"
 
 const port = 8080 
 const app = express()
@@ -27,9 +28,12 @@ instrument(io, {
     mode: "development"
 })
 
+// Initialize the database cleanup cron job
+setupCleanupJob();
+
 server.listen(port, () => {
     console.log(`Server is running on port ${port}`);
   });
   
-  setupSocket(io)
-  export {io}
+setupSocket(io)
+export {io}
