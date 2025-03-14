@@ -52,7 +52,7 @@ export default function ProfilePage() {
               />
             ) : (
               <div className="h-32 w-32 rounded-full bg-primary text-primary-content flex items-center justify-center text-2xl font-semibold border border-base-300">
-                {session.user.email?.[0]?.toUpperCase() ?? "U"}
+                {session.user.email ? session.user.email.substring(0, 1).toUpperCase() : "U"}
               </div>
             )}
             <div className="text-center">

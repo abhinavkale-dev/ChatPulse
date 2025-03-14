@@ -32,7 +32,7 @@ function formatMessage(msg) {
         createdAt: msg.createdAt.toISOString(),
         user: {
             email: msg.userEmail,
-            avatar: msg.userAvatar || "",
+            avatar: msg.userAvatar || undefined,
         },
     };
 }
@@ -97,7 +97,7 @@ function setupSocket(io) {
             console.log(`Received message from ${data.user.email} for room ${data.room}`);
             const userInfo = {
                 email: data.user.email || "unknown@example.com",
-                avatar: data.user.avatar || "",
+                avatar: data.user.avatar || null,
             };
             try {
                 // Rate limiting logic

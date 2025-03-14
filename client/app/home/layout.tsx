@@ -28,7 +28,8 @@ const ProfileAvatar = memo(({ user }: { user?: ExtendedUser }) => {
           />
         ) : (
           <AvatarFallback className="bg-primary text-primary-content">
-            {user?.name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || "U"}
+            {(user?.name ? user.name.substring(0, 1).toUpperCase() : null) || 
+             (user?.email ? user.email.substring(0, 1).toUpperCase() : "U")}
           </AvatarFallback>
         )}
       </Avatar>

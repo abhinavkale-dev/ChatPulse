@@ -92,7 +92,7 @@ export default function HomePage() {
                           <AvatarImage src="/avatar.png" alt="Default avatar" />
                         )}
                         <AvatarFallback className="bg-primary text-primary-content">
-                          {user.email?.[0]?.toUpperCase() || "U"}
+                          {user.email ? user.email.substring(0, 1).toUpperCase() : "U"}
                         </AvatarFallback>
                       </Avatar>
                       

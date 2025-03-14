@@ -2,6 +2,18 @@ import { Server, Socket } from "socket.io";
 import prisma from "../lib/prisma.server";
 import redis from "../redis/redis";
 
+// Define the database record type
+interface ChatMessageRecord {
+  id: string;
+  sender: string;
+  message: string;
+  chatGroupId: string;
+  createdAt: Date;
+  userEmail: string;
+  userAvatar?: string | null;
+  userId: string;
+}
+
 interface CustomSocket extends Socket {
   room?: string;
 }
@@ -46,7 +58,7 @@ const RATE_LIMIT = {
 const rateLimitedUsers = new Map<string, number>();
 
 // Helper function to format a message from the DB record to ChatMessage interface
-function formatMessage(msg: any): ChatMessage {
+function formatMessage(msg: ChatMessageRecord): ChatMessage {
   return {
     id: msg.id,
     sender: msg.sender,
@@ -55,7 +67,7 @@ function formatMessage(msg: any): ChatMessage {
     createdAt: msg.createdAt.toISOString(),
     user: {
       email: msg.userEmail,
-      avatar: msg.userAvatar || "",
+      avatar: msg.userAvatar || undefined,
     },
   };
 }
@@ -123,7 +135,7 @@ export function setupSocket(io: Server): void {
 
       const userInfo = {
         email: data.user.email || "unknown@example.com",
-        avatar: data.user.avatar || "",
+        avatar: data.user.avatar || null,
       };
 
       try {

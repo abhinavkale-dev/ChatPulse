@@ -27,6 +27,11 @@ const AvatarImage = React.forwardRef<
   <AvatarPrimitive.Image
     ref={ref}
     className={cn("aspect-square h-full w-full", className)}
+    referrerPolicy="no-referrer"
+    onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+      // Fallback to default avatar if image fails to load
+      e.currentTarget.src = "/avatar.png";
+    }}
     {...props}
   />
 ))

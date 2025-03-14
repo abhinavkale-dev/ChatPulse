@@ -217,7 +217,7 @@ export default function ChatBase({ groupId }: { groupId: string }) {
                   {!isOwn && (
                     <ChatBubbleAvatar 
                       src={message.user.avatar || "/avatar.png"} 
-                      fallback={message.user.email.charAt(0).toUpperCase()}
+                      fallback={message.user.email ? message.user.email.substring(0, 1).toUpperCase() : "U"}
                     />
                   )}
                   <div className={cn(
