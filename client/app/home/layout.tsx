@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, memo } from "react";
 import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar";
 import { UserRoundSearch, Settings, LogOut } from "lucide-react";
 import Link from "next/link";
@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { signOut, useSession } from "next-auth/react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 type ExtendedUser = {
   id?: string | null;
@@ -15,22 +16,42 @@ type ExtendedUser = {
   avatar?: string | null;
 };
 
+// Create a memoized profile avatar component
+const ProfileAvatar = memo(({ user }: { user?: ExtendedUser }) => {
+  return (
+    <div className="relative">
+      <Avatar className="h-7 w-7 flex-shrink-0 border border-base-300">
+        {user?.avatar ? (
+          <AvatarImage 
+            src={user.avatar}
+            alt={`${user?.email || "User"}'s avatar`}
+          />
+        ) : (
+          <AvatarFallback className="bg-primary text-primary-content">
+            {user?.name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || "U"}
+          </AvatarFallback>
+        )}
+      </Avatar>
+    </div>
+  );
+});
+ProfileAvatar.displayName = 'ProfileAvatar';
+
 export default function HomeLayout({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const { data: session, status } = useSession();
   const [toastShown, setToastShown] = useState(false);
+  const router = useRouter();
   
   const user = session?.user as ExtendedUser;
   
   useEffect(() => {
-    if (status === "authenticated") {
-      if (user?.name && !toastShown) {
-        toast.success(`Welcome, ${user.name}!`, {
-          id: "auth-toast"
-        });
-        
-        setToastShown(true);
-      }
+    if (status === "authenticated" && user?.name && !toastShown) {
+      toast.success(`Welcome, ${user.name}!`, {
+        id: "auth-toast"
+      });
+      
+      setToastShown(true);
     }
   }, [status, user, toastShown]);
   
@@ -69,6 +90,17 @@ export default function HomeLayout({ children }: { children: React.ReactNode }) 
     },
   ];
 
+  // Force a re-render of the component when the session state changes
+  useEffect(() => {
+    if (status === "authenticated") {
+      // This is a hack to force a re-render
+      const timer = setTimeout(() => {
+        router.refresh();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [status, router]);
+
   return (
     <div className="flex flex-col md:flex-row h-screen w-full overflow-hidden bg-background">
       <Sidebar open={open} setOpen={setOpen}>
@@ -86,25 +118,7 @@ export default function HomeLayout({ children }: { children: React.ReactNode }) 
               link={{
                 label: user?.name || user?.email?.split('@')[0] || "User Profile",
                 href: "/profile",
-                icon: (
-                  <div className="relative">
-                    {user?.avatar ? (
-                      <img 
-                        src={user.avatar}
-                        alt={`${user?.email || "User"}'s avatar`}
-                        className="h-7 w-7 flex-shrink-0 border border-base-300 rounded-full object-cover"
-                        referrerPolicy="no-referrer"
-                        onError={(e) => {
-                          e.currentTarget.src = "/avatar.png";
-                        }}
-                      />
-                    ) : (
-                      <div className="h-7 w-7 flex-shrink-0 border border-base-300 rounded-full bg-primary text-primary-content flex items-center justify-center">
-                        {user?.name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || "U"}
-                      </div>
-                    )}
-                  </div>
-                ),
+                icon: <ProfileAvatar key={user?.id || 'no-user'} user={user} />
               }}
             />
           </div>

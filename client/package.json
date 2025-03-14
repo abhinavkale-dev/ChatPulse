@@ -6,10 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "prisma:generate": "prisma generate --schema=../prisma/schema.prisma",
-    "prisma:migrate": "prisma migrate dev --schema=../prisma/schema.prisma",
-    "prisma:studio": "prisma studio --schema=../prisma/schema.prisma"
+    "lint": "next lint"
   },
   "dependencies": {
     "@chatscope/chat-ui-kit-styles": "^1.4.0",
