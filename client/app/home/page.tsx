@@ -75,10 +75,24 @@ function Home() {
         },
         body: JSON.stringify({ roomName })
       })
-      if (!res.ok) {
-        throw new Error("Failed to create room")
-      }
+      
       const data = await res.json()
+      
+      if (!res.ok) {
+        // Check if this is a rate limit error (429 status code)
+        if (res.status === 429) {
+          toast.error("Rate Limit Exceeded", {
+            description: data.message || "You can only create 2 rooms per hour. Please try again later.",
+            duration: 5000
+          })
+        } else {
+          toast.error("Error", {
+            description: data.error || "Failed to create room. Please try again."
+          })
+        }
+        throw new Error(data.error || "Failed to create room")
+      }
+      
       setRooms(prevRooms => [data.room, ...prevRooms])
       setNewRoomName("")
       setOpen(false)
@@ -88,9 +102,7 @@ function Home() {
       })
     } catch (err) {
       console.error('Error creating room:', err)
-      toast.error("Error", {
-        description: "Failed to create room. Please try again."
-      })
+      // Toast notifications are now handled above based on the response
     } finally {
       setIsCreating(false)
     }

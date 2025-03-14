@@ -17,6 +17,7 @@ interface FormCredentials {
 interface AuthResponse {
   id: string;
   email: string | null;
+  avatar?: string | null;
 }
 
 async function checkIfEmailUsedWithGoogle(email: string) {
@@ -80,10 +81,11 @@ export const authOptions = {
             data: {
               email,
               password: hashedPassword,
+              avatar: `https://ui-avatars.com/api/?name=${email.charAt(0)}&background=random&color=fff`,
             },
           });
-
-          return { id: newUser.id, email: newUser.email };
+          
+          return { id: newUser.id, email: newUser.email, avatar: newUser.avatar };
         } else {
           // Signin Flow
           signInSchema.parse({ email, password });
@@ -98,7 +100,19 @@ export const authOptions = {
             throw new Error("Invalid password.");
           }
 
-          return { id: user.id, email: user.email };
+          // If user doesn't have an avatar, update their record with a generated one
+          if (!user.avatar) {
+            const updatedUser = await prisma.user.update({
+              where: { id: user.id },
+              data: {
+                avatar: `https://ui-avatars.com/api/?name=${email.charAt(0)}&background=random&color=fff`
+              }
+            });
+            
+            return { id: updatedUser.id, email: updatedUser.email, avatar: updatedUser.avatar };
+          }
+          
+          return { id: user.id, email: user.email, avatar: user.avatar };
         }
       },
     }),
