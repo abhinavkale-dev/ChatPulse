@@ -81,7 +81,7 @@ export const authOptions = {
             data: {
               email,
               password: hashedPassword,
-              avatar: `https://ui-avatars.com/api/?name=${email.charAt(0)}&background=random&color=fff`,
+              avatar: "/avatar.png",
             },
           });
           
@@ -100,12 +100,12 @@ export const authOptions = {
             throw new Error("Invalid password.");
           }
 
-          // If user doesn't have an avatar, update their record with a generated one
+          // If user doesn't have an avatar, update their record with a default avatar
           if (!user.avatar) {
             const updatedUser = await prisma.user.update({
               where: { id: user.id },
               data: {
-                avatar: `https://ui-avatars.com/api/?name=${email.charAt(0)}&background=random&color=fff`
+                avatar: "/avatar.png"
               }
             });
             
@@ -134,17 +134,30 @@ export const authOptions = {
             where: { email: user.email! }
           });
           
+          // Fix for Google avatar URLs - remove size parameters
+          let googleAvatarUrl = user.image || "";
+          if (googleAvatarUrl.includes('googleusercontent.com')) {
+            // Remove the size parameter if present
+            googleAvatarUrl = googleAvatarUrl.split('=')[0];
+          }
+          
           if (!existingUser) {
             // Create user without password for Google sign-in
             await prisma.user.create({
               data: {
                 email: user.email!,
-                avatar: user.image,
+                avatar: googleAvatarUrl,
                 // No password for Google users
               }
             });
             
             return true; // Successfully created new user
+          } else {
+            // Update the existing user's avatar with the fixed Google avatar URL
+            await prisma.user.update({
+              where: { id: existingUser.id },
+              data: { avatar: googleAvatarUrl }
+            });
           }
           return true;
         } catch (error) {
@@ -169,8 +182,23 @@ export const authOptions = {
       if (user) {
         token.id = user.id;
         token.email = user.email;
-        token.avatar =
-          user.avatar || (account?.provider === "google" && profile?.picture ? profile.picture : null);
+        
+        // Ensure Google avatars are properly formatted
+        if (account?.provider === "google" && profile?.picture) {
+          // Fix for Google avatar URLs - remove size parameters
+          let googleAvatarUrl = profile.picture;
+          
+          // Remove any size parameters from Google URLs
+          if (googleAvatarUrl.includes('googleusercontent.com')) {
+            // Remove the size parameter if present
+            googleAvatarUrl = googleAvatarUrl.split('=')[0];
+          }
+          
+          token.avatar = googleAvatarUrl;
+        } else {
+          // For regular sign-ins, use the stored avatar
+          token.avatar = user.avatar;
+        }
       }
       return token;
     },

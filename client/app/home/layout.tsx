@@ -23,12 +23,14 @@ export default function HomeLayout({ children }: { children: React.ReactNode }) 
   const user = session?.user as ExtendedUser;
   
   useEffect(() => {
-    if (status === "authenticated" && user?.name && !toastShown) {
-      toast.success(`Welcome, ${user.name}!`, {
-        id: "auth-toast"
-      });
-      
-      setToastShown(true);
+    if (status === "authenticated") {
+      if (user?.name && !toastShown) {
+        toast.success(`Welcome, ${user.name}!`, {
+          id: "auth-toast"
+        });
+        
+        setToastShown(true);
+      }
     }
   }, [status, user, toastShown]);
   
@@ -86,21 +88,21 @@ export default function HomeLayout({ children }: { children: React.ReactNode }) 
                 href: "/profile",
                 icon: (
                   <div className="relative">
-                    <Avatar className="h-7 w-7 flex-shrink-0 border border-base-300">
-                      {user?.avatar && (
-                        <AvatarImage 
-                          src={user.avatar}
-                          alt={`${user?.email || "User"}'s avatar`}
-                          onError={(e) => {
-                            console.log("Avatar failed to load:", user?.avatar);
-                            e.currentTarget.style.display = 'none';
-                          }}
-                        />
-                      )}
-                      <AvatarFallback className="bg-primary text-primary-content">
+                    {user?.avatar ? (
+                      <img 
+                        src={user.avatar}
+                        alt={`${user?.email || "User"}'s avatar`}
+                        className="h-7 w-7 flex-shrink-0 border border-base-300 rounded-full object-cover"
+                        referrerPolicy="no-referrer"
+                        onError={(e) => {
+                          e.currentTarget.src = "/avatar.png";
+                        }}
+                      />
+                    ) : (
+                      <div className="h-7 w-7 flex-shrink-0 border border-base-300 rounded-full bg-primary text-primary-content flex items-center justify-center">
                         {user?.name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || "U"}
-                      </AvatarFallback>
-                    </Avatar>
+                      </div>
+                    )}
                   </div>
                 ),
               }}
