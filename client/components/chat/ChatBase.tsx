@@ -10,10 +10,11 @@ import {
 } from "@/components/ui/chat-bubble"
 import { ChatInput } from "@/components/ui/chat-input"
 import { Button } from "@/components/ui/button"
-import { Send } from "lucide-react"
+import { Send, Smile } from "lucide-react"
 import { format } from "date-fns"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
+import EmojiPicker from 'emoji-picker-react'
 
 interface ChatMessage {
   id: string
@@ -32,6 +33,7 @@ export default function ChatBase({ groupId }: { groupId: string }) {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [messageText, setMessageText] = useState("")
   const [isConnected, setIsConnected] = useState(false)
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const MAX_MESSAGE_LENGTH = 500
 
@@ -190,6 +192,11 @@ export default function ChatBase({ groupId }: { groupId: string }) {
     }
   }
 
+  const onEmojiClick = (emojiObject: any) => {
+    setMessageText((prevText) => prevText + emojiObject.emoji)
+    setShowEmojiPicker(false)
+  }
+
   // Format message timestamp - simplified version
   const formatMessageTime = (timestamp?: string) => {
     if (!timestamp) return "";
@@ -214,10 +221,15 @@ export default function ChatBase({ groupId }: { groupId: string }) {
                   key={message.id} 
                   variant={isOwn ? "sent" : "received"}
                 >
-                  {!isOwn && (
+                  {!isOwn ? (
                     <ChatBubbleAvatar 
                       src={message.user.avatar || "/avatar.png"} 
                       fallback={message.user.email ? message.user.email.substring(0, 1).toUpperCase() : "U"}
+                    />
+                  ) : (
+                    <ChatBubbleAvatar 
+                      src={session?.user?.avatar || "/avatar.png"} 
+                      fallback={session?.user?.email ? session.user.email.substring(0, 1).toUpperCase() : "U"}
                     />
                   )}
                   <div className={cn(
@@ -249,14 +261,29 @@ export default function ChatBase({ groupId }: { groupId: string }) {
       <div className="border-t border-border p-4">
         <div className="flex flex-col gap-1">
           <div className="flex gap-2">
-            <ChatInput
-              value={messageText}
-              onChange={handleMessageChange}
-              onKeyDown={handleKeyDown}
-              placeholder="Type a message..."
-              className="flex-1"
-              maxLength={MAX_MESSAGE_LENGTH}
-            />
+            <div className="flex-1 relative">
+              <ChatInput
+                value={messageText}
+                onChange={handleMessageChange}
+                onKeyDown={handleKeyDown}
+                placeholder="Type a message..."
+                className="flex-1"
+                maxLength={MAX_MESSAGE_LENGTH}
+              />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute left-2 top-1/2 transform -translate-y-1/2"
+                onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+              >
+                <Smile className="h-5 w-5" />
+              </Button>
+              {showEmojiPicker && (
+                <div className="absolute bottom-full left-0 mb-2">
+                  <EmojiPicker onEmojiClick={onEmojiClick} />
+                </div>
+              )}
+            </div>
             <Button 
               onClick={handleSendMessage} 
               size="icon" 

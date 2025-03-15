@@ -2,7 +2,7 @@
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { MessageCircleMore } from 'lucide-react'
+import { MessageCircleMore, MoreVertical, Share, Trash2 } from 'lucide-react'
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import {
@@ -13,6 +13,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Input } from '@/components/ui/input'
 import { useSession } from 'next-auth/react'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -23,6 +29,8 @@ interface ChatGroup {
   userId: string
   title: string
   createdAt: string
+  totalParticipants: number
+  updatedAt: string
 }
 
 function Home() {
@@ -79,7 +87,6 @@ function Home() {
       const data = await res.json()
       
       if (!res.ok) {
-        // Check if this is a rate limit error (429 status code)
         if (res.status === 429) {
           toast.error("Rate Limit Exceeded", {
             description: data.message || "You can only create 2 rooms per hour. Please try again later.",
@@ -102,11 +109,31 @@ function Home() {
       })
     } catch (err) {
       console.error('Error creating room:', err)
-      // Toast notifications are now handled above based on the response
     } finally {
       setIsCreating(false)
     }
   }
+
+  const handleDelete = async (roomId: string) => {
+    try {
+      const response = await fetch(`/api/rooms/${roomId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        toast.error(data.error || "Failed to delete room");
+        return;
+      }
+
+      // Remove the room from the list
+      setRooms(rooms.filter(room => room.id !== roomId));
+      toast.success("Room deleted successfully");
+    } catch (error) {
+      console.error('Error deleting room:', error);
+      toast.error("Failed to delete room");
+    }
+  };
 
   return (
     <>
@@ -135,7 +162,7 @@ function Home() {
       <div className="p-3 pt-14 md:pt-3 sm:p-6 w-full">
         {isLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[...Array(15)].map((_, index) => (
+            {[...Array(24)].map((_, index) => (
               <Card key={index} className="overflow-hidden">
                 <CardContent className="flex items-center justify-between p-4">
                   <div className="space-y-2">
@@ -158,19 +185,52 @@ function Home() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {rooms.map(room => (
-              <Link href={`/chat/${room.id}`} key={room.id}>
-                <Card className="overflow-hidden hover:shadow-md transition-all hover:scale-[1.02] cursor-pointer">
-                  <CardContent className="flex items-center justify-between p-4">
+              <Card key={room.id} className="overflow-hidden hover:shadow-md transition-all hover:scale-[1.02] cursor-pointer">
+                <CardContent className="flex items-center justify-between p-4">
+                  <Link href={`/chat/${room.id}`} className="flex-1">
                     <div>
                       <h1 className="text-xl font-medium">{room.title}</h1>
-                      <p className="text-sm text-gray-500">
-                        {new Date(room.createdAt).toLocaleDateString()}
-                      </p>
+                      <div className="space-y-1">
+                        <p className="text-sm text-gray-500">
+                          {new Date(room.createdAt).toLocaleDateString()}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          {room.totalParticipants} {room.totalParticipants === 1 ? 'participant' : 'participants'}
+                        </p>
+                      </div>
                     </div>
+                  </Link>
+                  <div className="flex items-center gap-2">
                     <MessageCircleMore className="text-primary" />
-                  </CardContent>
-                </Card>
-              </Link>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-8 w-8 p-0">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                          onClick={(e) => {
+                            e.preventDefault()
+                            // Copy the room link to clipboard
+                            const roomLink = `${window.location.origin}/chat/${room.id}`
+                            navigator.clipboard.writeText(roomLink)
+                            toast.success("Link copied to clipboard!")
+                          }}
+                          className="cursor-pointer"
+                        >
+                          <Share className="mr-2 h-4 w-4" />
+                          <span>Share</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleDelete(room.id)} className="text-red-600">
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          <span>Delete room</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </CardContent>
+              </Card>
             ))}
           </div>
         )}

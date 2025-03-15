@@ -27,6 +27,7 @@ function formatMessage(msg) {
     return {
         id: msg.id,
         sender: msg.sender,
+        senderAvatar: msg.userAvatar || undefined,
         message: msg.message,
         room: msg.chatGroupId,
         createdAt: msg.createdAt.toISOString(),

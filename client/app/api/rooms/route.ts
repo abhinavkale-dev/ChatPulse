@@ -20,12 +20,29 @@ export async function GET() {
     const rooms = await prisma.chatGroup.findMany({
       orderBy: {
         createdAt: 'desc'
+      },
+      include: {
+        ChatMessage: {
+          select: {
+            userId: true
+          }
+        }
       }
     })
-    return NextResponse.json({rooms})
+
+    const roomsWithUserCount = rooms.map(room => ({
+      id: room.id,
+      userId: room.userId,
+      title: room.title,
+      createdAt: room.createdAt,
+      updatedAt: room.updatedAt,
+      totalParticipants: new Set(room.ChatMessage.map(msg => msg.userId)).size
+    }))
+
+    return NextResponse.json({ rooms: roomsWithUserCount })
   }
   catch(error){
-    console.error("Error fetching rooms", error)
+    console.error("Error fetching rooms:", error)
     return NextResponse.json({error: "Failed to fetch rooms"}, {status: 500})
   }
 }
@@ -83,12 +100,30 @@ export async function POST(req: NextRequest) {
         userId: user.id,
         title: roomName,
         updatedAt: new Date()
+      },
+      include: {
+        ChatMessage: {
+          select: {
+            userId: true
+          }
+        }
       }
     })
-    return NextResponse.json({room})
+
+    // Format the response to match GET endpoint
+    const formattedRoom = {
+      id: room.id,
+      userId: room.userId,
+      title: room.title,
+      createdAt: room.createdAt,
+      updatedAt: room.updatedAt,
+      totalParticipants: 0 // New room starts with 0 participants
+    }
+
+    return NextResponse.json({ room: formattedRoom })
   }
   catch(error) {
-    console.error("Error creating room", error)
+    console.error("Error creating room:", error)
     return NextResponse.json({error: "Failed to create room" }, {status: 500})
   }
 }

@@ -21,6 +21,7 @@ interface CustomSocket extends Socket {
 export interface ChatMessage {
   id: string;
   sender: string;
+  senderAvatar?: string;
   message: string;
   room: string;
   createdAt: string;
@@ -62,6 +63,7 @@ function formatMessage(msg: ChatMessageRecord): ChatMessage {
   return {
     id: msg.id,
     sender: msg.sender,
+    senderAvatar: msg.userAvatar || undefined,
     message: msg.message,
     room: msg.chatGroupId,
     createdAt: msg.createdAt.toISOString(),
