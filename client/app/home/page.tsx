@@ -223,7 +223,7 @@ function Home() {
                           <span>Share</span>
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleDelete(room.id)} className="text-red-600">
-                          <Trash2 className="mr-2 h-4 w-4" />
+                          <Trash2 className="mr-2 h-4 w-4 text-red-600" />
                           <span>Delete room</span>
                         </DropdownMenuItem>
                       </DropdownMenuContent>

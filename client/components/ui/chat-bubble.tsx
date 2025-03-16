@@ -46,7 +46,7 @@ export function ChatBubbleMessage({
   return (
     <div
       className={cn(
-        "rounded-lg p-3 max-w-[75%] break-words whitespace-pre-wrap",
+        "rounded-lg p-2 max-w-[85%] break-words whitespace-pre-wrap",
         variant === "sent" 
           ? "bg-muted text-foreground ml-auto" 
           : "bg-muted text-foreground mr-auto",

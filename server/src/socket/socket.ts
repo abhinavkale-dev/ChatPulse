@@ -2,7 +2,6 @@ import { Server, Socket } from "socket.io";
 import prisma from "../lib/prisma.server";
 import redis from "../redis/redis";
 
-// Define the database record type
 interface ChatMessageRecord {
   id: string;
   sender: string;
@@ -48,7 +47,7 @@ interface SendMessageData {
 
 type FetchMessagesCallback = (messages: ChatMessage[]) => void;
 
-const CACHE_EXPIRY = 60 * 60 * 24; // 24 hours in seconds
+const CACHE_EXPIRY = 60 * 60 * 24;
 
 const RATE_LIMIT = {
   MAX_MESSAGES: 10,
@@ -58,7 +57,6 @@ const RATE_LIMIT = {
 
 const rateLimitedUsers = new Map<string, number>();
 
-// Helper function to format a message from the DB record to ChatMessage interface
 function formatMessage(msg: ChatMessageRecord): ChatMessage {
   return {
     id: msg.id,
@@ -74,7 +72,6 @@ function formatMessage(msg: ChatMessageRecord): ChatMessage {
   };
 }
 
-// Helper function to fetch messages for a room using Redis as a cache
 async function getMessagesForRoom(room: string): Promise<ChatMessage[]> {
   const cacheKey = `chat:${room}:messages`;
   try {
@@ -93,7 +90,6 @@ async function getMessagesForRoom(room: string): Promise<ChatMessage[]> {
     return formattedMessages;
   } catch (error) {
     console.error("Error fetching messages:", error);
-    // Fallback to DB if Redis fails
     const messagesFromDB = await prisma.chatMessage.findMany({
       where: { chatGroupId: room },
       orderBy: { createdAt: "asc" },
@@ -103,7 +99,6 @@ async function getMessagesForRoom(room: string): Promise<ChatMessage[]> {
 }
 
 export function setupSocket(io: Server): void {
-  // Middleware to set room on the socket
   io.use((socket: CustomSocket, next) => {
     const room = socket.handshake.auth.room as string | undefined;
     if (room) {
@@ -116,8 +111,6 @@ export function setupSocket(io: Server): void {
     if (socket.room) {
       socket.join(socket.room);
       console.log(`Socket ${socket.id} joined room: ${socket.room}`);
-
-      // Immediately fetch and emit messages to the client on connection
       getMessagesForRoom(socket.room)
         .then((messages) => socket.emit("fetch_messages", messages))
         .catch((err) => console.error("Error on connection:", err));
@@ -125,13 +118,11 @@ export function setupSocket(io: Server): void {
       console.log(`Socket ${socket.id} connected without a room`);
     }
 
-    // Handle fetching messages on demand
     socket.on("fetch_messages", async (data: FetchMessagesData, callback: FetchMessagesCallback) => {
       const messages = await getMessagesForRoom(data.room);
       callback(messages);
     });
 
-    // Handle sending a new message
     socket.on("send_message", async (data: SendMessageData) => {
       console.log(`Received message from ${data.user.email} for room ${data.room}`);
 
@@ -141,7 +132,6 @@ export function setupSocket(io: Server): void {
       };
 
       try {
-        // Rate limiting logic
         const rateLimitKey = `ratelimit:${userInfo.email}:${data.room}`;
         const rateLimitedKey = `${userInfo.email}:${data.room}`;
         const currentTime = Math.floor(Date.now() / 1000);
@@ -180,11 +170,9 @@ export function setupSocket(io: Server): void {
           return;
         }
 
-        // Find user in DB
         const user = await prisma.user.findUnique({ where: { email: userInfo.email } });
         if (!user) throw new Error(`User with email ${userInfo.email} not found`);
 
-        // Save message to DB
         const savedMessage = await prisma.chatMessage.create({
           data: {
             chatGroupId: data.room,
@@ -197,7 +185,6 @@ export function setupSocket(io: Server): void {
         });
         const formattedMessage = formatMessage(savedMessage);
 
-        // Update Redis cache with the new message
         const cacheKey = `chat:${data.room}:messages`;
         try {
           const cachedMessages = await redis.get(cacheKey);
@@ -208,7 +195,6 @@ export function setupSocket(io: Server): void {
           console.error("Redis cache update error:", err);
         }
 
-        // Broadcast the new message to the room
         io.to(data.room).emit("new_message", formattedMessage);
         console.log(`Message broadcast to room: ${data.room}`);
       } catch (error) {

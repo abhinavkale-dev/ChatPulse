@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, memo } from "react";
+import { useState, useEffect, memo } from "react";
 import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar";
 import { UserRoundSearch, Settings, LogOut } from "lucide-react";
 import Link from "next/link";
@@ -16,15 +16,20 @@ type ExtendedUser = {
   avatar?: string | null;
 };
 
-// Create a memoized profile avatar component
+// Create a memoized profile avatar component with stable rendering
 const ProfileAvatar = memo(({ user }: { user?: ExtendedUser }) => {
+  // Use a stable key based on the avatar URL without changing on every render
+  const avatarKey = user?.avatar || 'no-avatar';
+  
   return (
     <div className="relative">
       <Avatar className="h-7 w-7 flex-shrink-0 border border-base-300">
         {user?.avatar ? (
           <AvatarImage 
+            key={avatarKey}
             src={user.avatar}
             alt={`${user?.email || "User"}'s avatar`}
+            referrerPolicy="no-referrer"
           />
         ) : (
           <AvatarFallback className="bg-primary text-primary-content">
@@ -91,15 +96,33 @@ export default function HomeLayout({ children }: { children: React.ReactNode }) 
     },
   ];
 
-  // Force a re-render of the component when the session state changes
+  // Use a more efficient approach to refresh the UI without excessive API calls
   useEffect(() => {
+    // Only refresh the UI when the component mounts if we're authenticated
     if (status === "authenticated") {
-      // This is a hack to force a re-render
-      const timer = setTimeout(() => {
-        router.refresh();
-      }, 100);
-      return () => clearTimeout(timer);
+      // Just refresh the router without making API calls
+      // This will re-render components with the latest session data
+      router.refresh();
     }
+    
+    // Handle visibility changes (when returning to the tab)
+    let lastRefresh = Date.now();
+    const handleVisibilityChange = () => {
+      const now = Date.now();
+      // Only refresh if it's been at least 10 seconds since the last refresh
+      // This prevents excessive refreshes and API rate limits
+      if (document.visibilityState === 'visible' && 
+          status === "authenticated" && 
+          now - lastRefresh > 10000) {
+        lastRefresh = now;
+        router.refresh();
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, [status, router]);
 
   return (
@@ -114,7 +137,7 @@ export default function HomeLayout({ children }: { children: React.ReactNode }) 
               ))}
             </div>
           </div>
-          <div>
+          <div className="pt-4 border-t border-gray-200 dark:border-gray-800 mt-4">
             <SidebarLink
               link={{
                 label: user?.name || user?.email?.split('@')[0] || "User Profile",

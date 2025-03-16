@@ -36,16 +36,24 @@ export default function RootLayout({
             </QueryProvider>
             <Toaster 
               position="top-right"
+              closeButton
+              theme="light"
+              richColors
               toastOptions={{
                 duration: 4000,
                 style: {
-                  background: 'hsl(var(--background))',
-                  color: 'hsl(var(--foreground))',
-                  border: '1px solid hsl(var(--border))'
+                  backgroundColor: '#ffffff',
+                  color: '#000000',
+                  borderColor: '#e2e8f0',
+                  boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                  borderWidth: '1px',
+                  borderStyle: 'solid'
                 },
                 classNames: {
-                  description: "text-foreground opacity-100",
-                  toast: "font-medium",
+                  toast: "bg-white text-black border border-gray-200 shadow-lg",
+                  description: "text-gray-700 opacity-100",
+                  actionButton: "bg-blue-500 text-white",
+                  cancelButton: "bg-gray-200 text-gray-800",
                 }
               }}
             />

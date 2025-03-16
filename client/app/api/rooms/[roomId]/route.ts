@@ -64,4 +64,42 @@ export async function DELETE(
       { status: 500 }
     )
   }
+}
+
+export async function GET(
+  req: NextRequest,
+  context: { params: Promise<{ roomId: string }> }
+) {
+  try {
+    const { roomId } = await context.params
+    const session = await getServerSession(authOptions)
+
+    if (!session?.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    // Get the room
+    const room = await prisma.chatGroup.findUnique({
+      where: { id: roomId },
+      select: { 
+        id: true,
+        title: true,
+        userId: true,
+        createdAt: true,
+        updatedAt: true
+      }
+    })
+
+    if (!room) {
+      return NextResponse.json({ error: "Room not found" }, { status: 404 })
+    }
+
+    return NextResponse.json({ room })
+  } catch (error) {
+    console.error("Error fetching room:", error)
+    return NextResponse.json(
+      { error: "Failed to fetch room" },
+      { status: 500 }
+    )
+  }
 } 

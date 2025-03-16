@@ -5,7 +5,6 @@ import cors from "cors"
 import { setupSocket } from "./socket/socket"
 import { createAdapter } from "@socket.io/redis-streams-adapter";
 import redis from "./redis/redis"
-import {instrument} from "@socket.io/admin-ui"
 import { setupCleanupJob } from "./cleanup"
 
 const port = 8080 
@@ -14,7 +13,7 @@ const server = createServer(app)
 
 const io = new Server(server,{
     cors: {
-        origin: ["http://localhost:3000", "https://admin.socket.io"],
+        origin: ["http://localhost:3000"],
         methods: ["GET", "POST"],
         credentials: true
     },
@@ -22,11 +21,6 @@ const io = new Server(server,{
 })
 
 app.use(cors())
-
-instrument(io, {
-    auth: false,
-    mode: "development"
-})
 
 // Initialize the database cleanup cron job
 setupCleanupJob();

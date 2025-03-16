@@ -63,11 +63,11 @@ export const authOptions = {
           throw new Error("Email and password are required.");
         }
 
-        // Check if email is used with Google before proceeding
+
         await checkIfEmailUsedWithGoogle(email);
 
         if (confirmPassword) {
-          // Signup Flow
+
           signUpSchema.parse({ email, password, confirmPassword });
 
           const existingUser = await prisma.user.findUnique({ where: { email } });
@@ -87,7 +87,7 @@ export const authOptions = {
           
           return { id: newUser.id, email: newUser.email, avatar: newUser.avatar };
         } else {
-          // Signin Flow
+
           signInSchema.parse({ email, password });
 
           const user = await prisma.user.findUnique({ where: { email } });
@@ -100,7 +100,7 @@ export const authOptions = {
             throw new Error("Invalid password.");
           }
 
-          // If user doesn't have an avatar, update their record with a default avatar
+
           if (!user.avatar) {
             const updatedUser = await prisma.user.update({
               where: { id: user.id },
@@ -134,26 +134,21 @@ export const authOptions = {
             where: { email: user.email! }
           });
           
-          // Fix for Google avatar URLs - remove size parameters
-          let googleAvatarUrl = user.image || "";
-          if (googleAvatarUrl.includes('googleusercontent.com')) {
-            // Remove the size parameter if present
-            googleAvatarUrl = googleAvatarUrl.split('=')[0];
-          }
+          const googleAvatarUrl = user.image || "";
           
           if (!existingUser) {
-            // Create user without password for Google sign-in
+
             await prisma.user.create({
               data: {
                 email: user.email!,
                 avatar: googleAvatarUrl,
-                // No password for Google users
+    
               }
             });
             
-            return true; // Successfully created new user
+            return true;
           } else {
-            // Update the existing user's avatar with the fixed Google avatar URL
+
             await prisma.user.update({
               where: { id: existingUser.id },
               data: { avatar: googleAvatarUrl }
@@ -183,20 +178,10 @@ export const authOptions = {
         token.id = user.id;
         token.email = user.email;
         
-        // Ensure Google avatars are properly formatted
+
         if (account?.provider === "google" && profile?.picture) {
-          // Fix for Google avatar URLs - remove size parameters
-          let googleAvatarUrl = profile.picture;
-          
-          // Remove any size parameters from Google URLs
-          if (googleAvatarUrl.includes('googleusercontent.com')) {
-            // Remove the size parameter if present
-            googleAvatarUrl = googleAvatarUrl.split('=')[0];
-          }
-          
-          token.avatar = googleAvatarUrl;
+          token.avatar = profile.picture;
         } else {
-          // For regular sign-ins, use the stored avatar
           token.avatar = user.avatar;
         }
       }
