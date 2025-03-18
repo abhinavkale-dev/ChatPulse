@@ -1,5 +1,6 @@
 "use client"
 
+import * as React from "react"
 import { 
   ChatBubble, 
   ChatBubbleAvatar, 
@@ -8,6 +9,7 @@ import {
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
 import { ChatMessage } from "@/types/chat"
+import { useAvatar } from "@/hooks/useAvatar"
 
 interface MessageItemProps {
   message: ChatMessage
@@ -17,6 +19,9 @@ interface MessageItemProps {
 }
 
 export function MessageItem({ message, isOwn, sessionUserAvatar, sessionUserEmail }: MessageItemProps) {
+  // Use our custom hook to handle avatar URLs consistently across browsers
+  const { avatarUrl: receiverAvatarUrl } = useAvatar(message.user.avatar);
+  const { avatarUrl: senderAvatarUrl } = useAvatar(sessionUserAvatar);
   // Format message timestamp
   const formatMessageTime = (timestamp?: string) => {
     if (!timestamp) return "";
@@ -97,14 +102,14 @@ export function MessageItem({ message, isOwn, sessionUserAvatar, sessionUserEmai
     <ChatBubble variant={isOwn ? "sent" : "received"}>
       {!isOwn ? (
         <ChatBubbleAvatar 
-          src={message.user.avatar || "/avatar.png"}
+          src={receiverAvatarUrl}
           className="h-10 w-10"
           fallback={message.user.email ? message.user.email.substring(0, 1).toUpperCase() : "U"}
         />
       ) : (
         <ChatBubbleAvatar 
           className="h-10 w-10"
-          src={sessionUserAvatar || "/avatar.png"} 
+          src={senderAvatarUrl} 
           fallback={sessionUserEmail ? sessionUserEmail.substring(0, 1).toUpperCase() : "U"}
         />
       )}

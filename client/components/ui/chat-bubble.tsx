@@ -75,9 +75,27 @@ export function ChatBubbleAvatar({
   fallback = "AI",
   className,
 }: ChatBubbleAvatarProps) {
+  // Track if the image has loaded successfully
+  const [imageLoaded, setImageLoaded] = React.useState<boolean>(false);
+  const [imageError, setImageError] = React.useState<boolean>(false);
+  
+  // Reset states when src changes
+  React.useEffect(() => {
+    setImageLoaded(false);
+    setImageError(false);
+  }, [src]);
+  
   return (
     <Avatar className={cn("h-8 w-8", className)}>
-      {src && <AvatarImage src={src} />}
+      {src && !imageError && (
+        <img 
+          src={src}
+          className="h-full w-full aspect-square"
+          onLoad={() => setImageLoaded(true)}
+          onError={() => setImageError(true)}
+          style={{ display: imageError ? 'none' : 'block' }}
+        />
+      )}
       <AvatarFallback>{fallback}</AvatarFallback>
     </Avatar>
   )

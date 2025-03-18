@@ -20,7 +20,7 @@ export default function ChatBase({ groupId }: { groupId: string }) {
   const handleSendMessage = () => {
     if (!messageText.trim() || messageText.length > MAX_MESSAGE_LENGTH) return
     
-    // Use the mutation from useChatQuery for optimistic updates
+    // Just send the message without optimistic updates
     sendMessage(messageText)
     
     // Clear the input field

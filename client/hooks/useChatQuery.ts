@@ -1,11 +1,10 @@
 "use client"
 
-import { useQueryClient, useMutation, useQuery } from "@tanstack/react-query"
+import { useQueryClient, useQuery } from "@tanstack/react-query"
 import { getSocket } from "@/app/lib/socket.config"
 import { useSession } from "next-auth/react"
 import { useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
-import { v4 as uuidv4 } from "uuid"
 import { ChatMessage } from "@/types/chat"
 
 export function useChatQuery(groupId: string) {
@@ -68,12 +67,7 @@ export function useChatQuery(groupId: string) {
     function onNewMessage(message: ChatMessage) {
       console.log(`Received new message: ${message.id}`)
       queryClient.setQueryData(['messages', groupId], (oldData: ChatMessage[] | undefined) => {
-        // Filter out any optimistic messages that might match this confirmed message
-        const filteredMessages = oldData?.filter(m => 
-          !(m.id.startsWith('optimistic-') && m.message === message.message && m.sender === message.sender)
-        ) || []
-        
-        return [...filteredMessages, message]
+        return [...(oldData || []), message]
       })
     }
 
@@ -157,66 +151,30 @@ export function useChatQuery(groupId: string) {
     enabled: false, // We'll manually manage this data with socket events
   })
 
-  // Mutation for sending messages with optimistic updates
-  const { mutate: sendMessage } = useMutation({
-    mutationFn: async (messageText: string) => {
-      if (!messageText.trim() || !session?.user) return null
-      if (messageText.length > MAX_MESSAGE_LENGTH) return null
+  // Function to send messages without optimistic updates
+  const sendMessage = (messageText: string) => {
+    if (!messageText.trim() || !session?.user) return
+    if (messageText.length > MAX_MESSAGE_LENGTH) return
 
-      const userEmail = session.user.email || 'unknown@example.com'
+    const userEmail = session.user.email || 'unknown@example.com'
 
-      const message = {
-        message: messageText,
-        room: groupId,
-        sender: session.user.id as string,
-        user: {
-          email: userEmail,
-          avatar: session.user.avatar || undefined
-        }
-      }
-
-      return new Promise<void>((resolve) => {
-        socket.current.emit("send_message", message)
-        resolve()
-      })
-    },
-    onMutate: async (messageText) => {
-      if (!session?.user) return { previousMessages: [] }
-      
-      // Cancel any outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ['messages', groupId] })
-      
-      // Snapshot the previous value
-      const previousMessages = queryClient.getQueryData(['messages', groupId]) as ChatMessage[]
-      
-      // Create optimistic message
-      const optimisticMessage: ChatMessage = {
-        id: `optimistic-${uuidv4()}`,
-        message: messageText,
-        room: groupId,
-        sender: session.user.id as string,
-        createdAt: new Date().toISOString(),
-        user: {
-          email: session.user.email || 'unknown@example.com',
-          avatar: session.user.avatar || undefined
-        }
-      }
-      
-      // Optimistically update the UI
-      queryClient.setQueryData(['messages', groupId], 
-        (old: ChatMessage[] | undefined) => [...(old || []), optimisticMessage]
-      )
-      
-      return { previousMessages }
-    },
-    onError: (err, newMessage, context) => {
-      toast.error("Failed to send message")
-      // Rollback to the previous state
-      if (context?.previousMessages) {
-        queryClient.setQueryData(['messages', groupId], context.previousMessages)
+    const message = {
+      message: messageText,
+      room: groupId,
+      sender: session.user.id as string,
+      user: {
+        email: userEmail,
+        avatar: session.user.avatar || undefined
       }
     }
-  })
+
+    // Send the message via socket without optimistic updates
+    socket.current.emit("send_message", message, (error: any) => {
+      if (error) {
+        toast.error("Failed to send message: " + error.message)
+      }
+    })
+  }
 
   return {
     messages,

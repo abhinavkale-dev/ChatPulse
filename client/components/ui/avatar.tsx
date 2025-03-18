@@ -23,18 +23,33 @@ Avatar.displayName = AvatarPrimitive.Root.displayName
 const AvatarImage = React.forwardRef<
   React.ElementRef<typeof AvatarPrimitive.Image>,
   React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Image>
->(({ className, ...props }, ref) => (
-  <AvatarPrimitive.Image
-    ref={ref}
-    className={cn("aspect-square h-full w-full", className)}
-    referrerPolicy="no-referrer"
-    onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
-      // Fallback to default avatar if image fails to load
-      e.currentTarget.src = "/avatar.png";
-    }}
-    {...props}
-  />
-))
+>(({ className, ...props }, ref) => {
+  // Track if the image has loaded or errored
+  const [hasError, setHasError] = React.useState(false);
+  
+  // Handle image load error
+  const handleError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    // In Safari, setting src in the error handler can cause infinite loops
+    // Instead, we'll just hide this image and let the fallback show
+    setHasError(true);
+  };
+  
+  if (hasError) {
+    // If there's an error, don't render the image at all
+    // This allows the fallback to show
+    return null;
+  }
+  
+  return (
+    <AvatarPrimitive.Image
+      ref={ref}
+      className={cn("aspect-square h-full w-full", className)}
+      referrerPolicy="no-referrer"
+      onError={handleError}
+      {...props}
+    />
+  );
+})
 AvatarImage.displayName = AvatarPrimitive.Image.displayName
 
 const AvatarFallback = React.forwardRef<
