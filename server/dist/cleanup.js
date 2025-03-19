@@ -15,44 +15,62 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.setupCleanupJob = setupCleanupJob;
 const node_cron_1 = __importDefault(require("node-cron"));
 const prisma_server_1 = __importDefault(require("./lib/prisma.server")); // Adjusted to match your Prisma path
-// Set your maximum DB size threshold to 4 GB (in bytes)
-const MAX_DB_SIZE = 4 * 1024 * 1024 * 1024; // 4GB
-// Function to get the current database size (PostgreSQL specific)
-function getDatabaseSize() {
+// Set retention period for chat groups (in days)
+const CHAT_GROUP_RETENTION_DAYS = 60; // 2 months
+// Function to delete old chat groups that haven't been used in the specified retention period
+function cleanupOldChatGroups() {
     return __awaiter(this, void 0, void 0, function* () {
-        // This query retrieves the size (in bytes) of the current database
-        const result = yield prisma_server_1.default.$queryRaw `
-    SELECT pg_database_size(current_database()) as size;
-  `;
-        if (result && result[0] && result[0].size) {
-            return typeof result[0].size === 'string' ?
-                parseInt(result[0].size, 10) :
-                result[0].size;
+        try {
+            // Calculate the cutoff date (current date minus retention period)
+            const cutoffDate = new Date();
+            cutoffDate.setDate(cutoffDate.getDate() - CHAT_GROUP_RETENTION_DAYS);
+            // Find chat groups older than the retention period
+            const oldGroups = yield prisma_server_1.default.chatGroup.findMany({
+                where: {
+                    updatedAt: {
+                        lt: cutoffDate
+                    }
+                },
+                select: {
+                    id: true
+                }
+            });
+            const oldGroupIds = oldGroups.map((group) => group.id);
+            if (oldGroupIds.length === 0) {
+                console.log('No old chat groups to delete');
+                return;
+            }
+            console.log(`Found ${oldGroupIds.length} chat groups older than ${CHAT_GROUP_RETENTION_DAYS} days`);
+            // First delete all messages in these groups
+            const deletedMessages = yield prisma_server_1.default.chatMessage.deleteMany({
+                where: {
+                    chatGroupId: {
+                        in: oldGroupIds
+                    }
+                }
+            });
+            // Then delete the groups themselves
+            const deletedGroups = yield prisma_server_1.default.chatGroup.deleteMany({
+                where: {
+                    id: {
+                        in: oldGroupIds
+                    }
+                }
+            });
+            console.log(`Deleted ${deletedMessages.count} messages and ${deletedGroups.count} chat groups`);
         }
-        return 0;
+        catch (error) {
+            console.error('Error cleaning up old chat groups:', error);
+        }
     });
 }
 // Function to setup the cleanup cron job
 function setupCleanupJob() {
-    // Schedule the cron job to run every day at 3:00 AM
-    node_cron_1.default.schedule('0 3 * * *', () => __awaiter(this, void 0, void 0, function* () {
-        console.log('Running DB cleanup cron job at 3:00 AM');
-        try {
-            const dbSize = yield getDatabaseSize();
-            console.log(`Current database size: ${dbSize} bytes`);
-            if (dbSize >= MAX_DB_SIZE) {
-                console.log('Database is full. Running cleanup.');
-                // Delete all chat messages
-                const result = yield prisma_server_1.default.chatMessage.deleteMany({});
-                console.log(`Cleanup complete. Deleted ${result.count} chat messages.`);
-            }
-            else {
-                console.log('Database is not full. Cleanup skipped.');
-            }
-        }
-        catch (error) {
-            console.error('Error during DB cleanup:', error);
-        }
+    // Schedule the chat group cleanup job to run on the 1st day of every other month at 2:00 AM
+    // The '0 2 1 */2 *' cron expression means: At 2:00 AM, on the 1st day of the month, every 2 months
+    node_cron_1.default.schedule('0 2 1 */2 *', () => __awaiter(this, void 0, void 0, function* () {
+        console.log('Running chat group cleanup job');
+        yield cleanupOldChatGroups();
     }));
-    console.log('Database cleanup job scheduled to run at 3:00 AM daily');
+    console.log('Chat group cleanup job scheduled: runs every 2 months');
 }

@@ -35,7 +35,7 @@ export default function ProfilePage() {
       <Button
         onClick={() => router.back()}
         variant="ghost"
-        className="mb-6 hover:bg-amber-500 hover:text-white gap-2"
+        className="mb-6 hover:bg-primary/10 hover:text-white gap-2"
       >
         <ArrowLeft className="h-4 w-4" />
         Back

@@ -21,6 +21,7 @@ import { signIn, useSession } from "next-auth/react";
 import { FcGoogle } from "react-icons/fc";
 import { useRouter } from "next/navigation";
 import type { z } from "zod";
+import posthog from 'posthog-js';
 
 export default function SignupPage() {
   return (
@@ -59,6 +60,11 @@ function Signup() {
 
   const onSubmit = async (values: z.infer<typeof signUpSchema>) => {
     setIsSubmitting(true);
+    
+    // Track signup attempt
+    posthog.capture('signup_started', {
+      method: 'credentials',
+    });
   
     try {
       const result = await signIn("credentials", {
@@ -69,11 +75,22 @@ function Signup() {
       });
   
       if (result?.error) {
+        // Track failed signup
+        posthog.capture('signup_failed', {
+          method: 'credentials',
+          error: result.error,
+        });
+        
         toast.error("Signup Failed", {
           description: result.error
         });
         console.error("Signup error:", result.error);
       } else {
+        // Track successful signup
+        posthog.capture('signup_successful', {
+          method: 'credentials',
+        });
+        
         router.push("/home");
       }
     } catch (error) {
@@ -87,6 +104,11 @@ function Signup() {
   };
 
   const handleGoogleSignup = () => {
+    // Track Google signup
+    posthog.capture('signup_started', {
+      method: 'google'
+    });
+    
     signIn("google", {
       callbackUrl: "/home"
     });

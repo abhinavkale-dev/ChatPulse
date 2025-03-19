@@ -21,6 +21,7 @@ import { signIn, useSession } from "next-auth/react";
 import { FcGoogle } from "react-icons/fc";
 import { useRouter } from "next/navigation";
 import type { z } from "zod";
+import posthog from 'posthog-js';
 
 export default function SigninPage() {
   return (
@@ -66,11 +67,22 @@ function Signin() {
       });
 
       if (result?.error) {
+        // Track failed login attempts
+        posthog.capture('login_failed', {
+          method: 'credentials',
+          error: result.error,
+        });
+        
         toast.error("Sign In Failed", {
           description: result.error
         });
         console.error("Sign in error:", result.error);
       } else {
+        // Track successful logins
+        posthog.capture('login_successful', {
+          method: 'credentials',
+        });
+        
         router.push("/home");
       }
     } catch (error) {
@@ -84,6 +96,11 @@ function Signin() {
   };
 
   const handleGoogleSignin = () => {
+    // Track Google sign in attempts
+    posthog.capture('login_started', {
+      method: 'google',
+    });
+    
     signIn("google", {
       callbackUrl: "/home"
     });

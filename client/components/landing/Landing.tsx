@@ -1,14 +1,12 @@
 "use client"
 
-import React, { useState } from 'react'
 import Hero from './Hero'
-import { AnimatePresence } from 'framer-motion'
-// import PreLoader from './Preloader';
+import PreLoader from './Preloader';
 
 function Landing() {
   return (
     <>
-    {/* <PreLoader/> */}
+    <PreLoader/>
     <div>
       <Hero />
     </div>

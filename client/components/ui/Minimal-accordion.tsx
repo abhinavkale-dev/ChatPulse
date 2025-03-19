@@ -48,7 +48,7 @@ const AccordionItem: React.FC<AccordionItemProps> = ({
 
   return (
     <motion.div
-      className="w-full my-4 h-full cursor-pointer select-none overflow-hidden rounded-lg border dark:border-gray-700"
+      className="my-4 cursor-pointer select-none overflow-hidden rounded-lg border dark:border-gray-700"
       variants={cardVariants}
       initial="collapsed"
       animate={isExpanded ? 'expanded' : 'collapsed'}
@@ -98,31 +98,31 @@ const Accordion: React.FC<AccordionProps> = ({ items }) => {
 
 const accordionItems = [
   {
-    title: 'Explore Knowledge',
+    title: 'Public Chat Rooms',
     content:
-      'Discover new worlds of information with our interactive learning platform.',
+      'Join open chat rooms and engage in conversations with people from all around the world.',
   },
   {
-    title: 'Innovative Learning',
+    title: 'Real-Time Messaging',
     content:
-      'Experience cutting-edge educational techniques that adapt to your unique learning style.',
+      'Chat instantly with smooth, real-time messaging to keep the conversation flowing.',
+  },
+  {
+    title: 'Express with GIFs & Emojis',
+    content:
+      'Make your chats fun and lively with a vast collection of GIFs and emojis.',
   },
   {
     title: 'Global Community',
     content:
-      'Connect with learners worldwide and share insights in our vibrant, diverse community.',
+      'Connect with a diverse and active community to share thoughts, ideas, and experiences.',
   },
-  {
-    title: 'Personalized Growth',
-    content:
-      'Track your progress and receive tailored recommendations to accelerate your learning journey.',
-  },
-]
+];
 
 const AccordionComp: React.FC = () => {
   return (
     <div className="flex justify-center">
-      <div className="w-full max-w-md p-8">
+      <div className="w-full max-w-xl p-8">
         <Accordion items={accordionItems} />
       </div>
     </div>

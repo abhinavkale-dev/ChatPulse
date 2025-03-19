@@ -1,14 +1,23 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import ChatDemo from './ChatDemo';
 import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button";
-import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { AnimatedShinyText } from '../magicui/animated-shiny-text';
 import { BentoGrid } from './BentoGrid';
 import AccordionComp from '../ui/Minimal-accordion';
+import { FooterComp } from './footerComp';
+import posthog from 'posthog-js';
 
 const Hero: React.FC = () => {
   const router = useRouter();
+  
+  useEffect(() => {
+    // Track landing page view
+    posthog.capture('landing_page_viewed', {
+      referrer: document.referrer,
+      timestamp: new Date().toISOString()
+    });
+  }, []);
   return (
     <div>
       <section className="relative min-h-screen pt-32 pb-24 md:pt-50 md:pb-32 overflow-hidden">
@@ -34,7 +43,14 @@ const Hero: React.FC = () => {
               </p>
               
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                <InteractiveHoverButton onClick={() => router.push('/signin')}>Get Started</InteractiveHoverButton>
+                <InteractiveHoverButton onClick={() => {
+                  // Track CTA button click
+                  posthog.capture('cta_clicked', {
+                    button_text: 'Get Started',
+                    destination: '/signin'
+                  });
+                  router.push('/signin');
+                }}>Get Started</InteractiveHoverButton>
               </div>
             </div>
             
@@ -82,7 +98,11 @@ const Hero: React.FC = () => {
       <AccordionComp />
       </section>
 
-      
+      <footer className="bg-primary/2">
+      <FooterComp />
+      </footer>
+
+
     </div>
   );
 };

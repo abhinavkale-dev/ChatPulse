@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 import { ChatMessage } from "@/types/chat"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import posthog from 'posthog-js'
 
 export function useChat(groupId: string) {
   // User session for authentication
@@ -40,6 +41,10 @@ export function useChat(groupId: string) {
     // Connection event handlers
     function onConnect() {
       setIsConnected(true)
+      // Track room joining with PostHog
+      posthog.capture('room_joined', {
+        room_id: groupId,
+      })
     }
 
     function onDisconnect() {
@@ -80,6 +85,11 @@ export function useChat(groupId: string) {
     queryFn: async () => {
       return new Promise<ChatMessage[]>((resolve) => {
         socket.current.emit("fetch_messages", { room: groupId }, (fetchedMessages: ChatMessage[]) => {
+          // Track message history loaded with PostHog
+          posthog.capture('messages_loaded', {
+            room_id: groupId,
+            message_count: fetchedMessages.length
+          })
           resolve(fetchedMessages)
         })
       })
@@ -217,6 +227,13 @@ export function useChat(groupId: string) {
 
   // Function to send a message (wrapper around the mutation)
   const sendMessage = (messageText: string) => {
+    // Track message sent event with PostHog
+    posthog.capture('message_sent', {
+      room_id: groupId,
+      message_length: messageText.length,
+      has_emoji: /[\u{1F300}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/u.test(messageText),
+    })
+    
     sendMessageMutation.mutate(messageText)
   }
 

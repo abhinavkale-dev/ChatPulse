@@ -4,6 +4,7 @@ import "./globals.css";
 import { AuthProvider } from "@/providers/NextAuthProvider";
 import { QueryProvider } from "@/providers/QueryProvider";
 import { Toaster } from "@/components/ui/sonner";
+import { PostHogProvider } from "@/providers/Posthog";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -18,6 +19,10 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "ChatPulse",
   description: "A fast chat app",
+
+  icons: {
+    icon: {url: '/logo.svg', type: 'image/svg+xml'}
+  }
 };
 
 export default function RootLayout({
@@ -27,12 +32,17 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
+      <head>
+          <link href="https://cdn.jsdelivr.net/npm/remixicon@3.6.0/fonts/remixicon.css" rel="stylesheet" />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background`}
       >
           <AuthProvider>
             <QueryProvider>
+              <PostHogProvider>
               {children}
+              </PostHogProvider>
             </QueryProvider>
             <Toaster 
               position="top-right"
