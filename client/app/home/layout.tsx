@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, memo } from "react";
 import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar";
-import { LogOut, Info, BadgeCheck } from "lucide-react";
+import { LogOut, Info, ScanFace } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { signOut, useSession } from "next-auth/react";
@@ -66,7 +66,7 @@ export default function HomeLayout({ children }: { children: React.ReactNode }) 
       label: "Socials",
       href: "/socials",
       icon: (
-        <BadgeCheck className="text-sidebar-foreground h-6 w-6 flex-shrink-0" />
+        <ScanFace className="text-sidebar-foreground h-6 w-6 flex-shrink-0" />
       ),
     },
     {
@@ -157,7 +157,7 @@ const Logo = () => {
         animate={{ opacity: 1 }}
         className="font-medium text-sidebar-foreground whitespace-pre"
       >
-        Acet Labs
+        Chat Pulse
       </motion.span>
     </Link>
   );

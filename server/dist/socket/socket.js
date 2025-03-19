@@ -15,13 +15,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.setupSocket = setupSocket;
 const prisma_server_1 = __importDefault(require("../lib/prisma.server"));
 const redis_1 = __importDefault(require("../redis/redis"));
+// Redis cache expiry time (24 hours)
 const CACHE_EXPIRY = 60 * 60 * 24;
-const RATE_LIMIT = {
-    MAX_MESSAGES: 10,
-    TIME_WINDOW: 60,
-    BLOCK_DURATION: 60,
-};
-const rateLimitedUsers = new Map();
 function formatMessage(msg) {
     return {
         id: msg.id,
@@ -94,42 +89,6 @@ function setupSocket(io) {
                 avatar: data.user.avatar || null,
             };
             try {
-                const rateLimitKey = `ratelimit:${userInfo.email}:${data.room}`;
-                const rateLimitedKey = `${userInfo.email}:${data.room}`;
-                const currentTime = Math.floor(Date.now() / 1000);
-                const limitExpireTime = rateLimitedUsers.get(rateLimitedKey);
-                if (limitExpireTime && currentTime < limitExpireTime) {
-                    const timeRemaining = limitExpireTime - currentTime;
-                    socket.emit("error", {
-                        type: "RATE_LIMIT_EXCEEDED",
-                        message: `You're sending messages too quickly. Wait ${timeRemaining} seconds.`,
-                        retryAfter: timeRemaining,
-                    });
-                    return;
-                }
-                const userMessageCount = yield redis_1.default.incr(rateLimitKey);
-                if (userMessageCount === 1) {
-                    yield redis_1.default.expire(rateLimitKey, RATE_LIMIT.TIME_WINDOW);
-                }
-                if (userMessageCount > RATE_LIMIT.MAX_MESSAGES) {
-                    console.log(`Rate limit exceeded for ${userInfo.email} in room ${data.room}`);
-                    const expireTime = currentTime + RATE_LIMIT.BLOCK_DURATION;
-                    rateLimitedUsers.set(rateLimitedKey, expireTime);
-                    setTimeout(() => {
-                        rateLimitedUsers.delete(rateLimitedKey);
-                    }, RATE_LIMIT.BLOCK_DURATION * 1000);
-                    socket.emit("error", {
-                        type: "RATE_LIMIT_EXCEEDED",
-                        message: `You're sending messages too quickly. Wait ${RATE_LIMIT.BLOCK_DURATION} seconds.`,
-                        retryAfter: RATE_LIMIT.BLOCK_DURATION,
-                    });
-                    socket.to(data.room).emit("moderation_event", {
-                        type: "USER_RATE_LIMITED",
-                        user: userInfo.email,
-                        message: `${userInfo.email} has been temporarily rate-limited.`,
-                    });
-                    return;
-                }
                 const user = yield prisma_server_1.default.user.findUnique({ where: { email: userInfo.email } });
                 if (!user)
                     throw new Error(`User with email ${userInfo.email} not found`);

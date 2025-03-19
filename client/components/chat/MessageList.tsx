@@ -26,6 +26,9 @@ export function MessageList({ messages }: MessageListProps) {
       ) : (
         <div className="space-y-4 max-w-full">
           {messages.map((message) => {
+            // Make sure we have a valid message object to prevent errors
+            if (!message || !message.id) return null
+            
             const isOwn = message.sender === (session?.user?.id as string)
             return (
               <MessageItem 
@@ -33,7 +36,6 @@ export function MessageList({ messages }: MessageListProps) {
                 message={message}
                 isOwn={isOwn}
                 sessionUserAvatar={session?.user?.avatar as string}
-                sessionUserEmail={session?.user?.email as string}
               />
             )
           })}
