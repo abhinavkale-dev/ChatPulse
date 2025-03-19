@@ -1,45 +1,57 @@
 "use client"
 
-import { useQueryClient, useQuery } from "@tanstack/react-query"
 import { getSocket } from "@/app/lib/socket.config"
 import { useSession } from "next-auth/react"
 import { useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 import { ChatMessage } from "@/types/chat"
 
-export function useChatQuery(groupId: string) {
+/**
+ * Simple chat hook for handling messages in a chat room
+ * @param groupId - The ID of the chat room
+ */
+export function useChat(groupId: string) {
+  // User session for authentication
   const { data: session } = useSession()
+  
+  // Basic state
   const [isConnected, setIsConnected] = useState(false)
   const [roomTitle, setRoomTitle] = useState("")
-  const messagesLoaded = useRef(false)
-  const MAX_MESSAGE_LENGTH = 500
-  const queryClient = useQueryClient()
+  const [messages, setMessages] = useState<ChatMessage[]>([])
   
-  // Create and configure socket
+  // Track if messages have been loaded
+  const messagesLoaded = useRef(false)
+  
+  // Maximum message length
+  const MAX_MESSAGE_LENGTH = 500
+  
+  // Socket connection
   const socket = useRef(getSocket())
   
+  // Set up socket connection
   useEffect(() => {
-    console.log(`Configuring socket for room: ${groupId}`)
+    // Set room ID in socket auth
     socket.current.auth = { room: groupId }
     
+    // Connect socket if not connected
     if (!socket.current.connected) {
-      console.log("Connecting socket...")
       socket.current.connect()
     }
 
+    // Connection event handlers
     function onConnect() {
-      console.log("Socket connected!")
       setIsConnected(true)
     }
 
     function onDisconnect() {
-      console.log("Socket disconnected!")
       setIsConnected(false)
     }
 
+    // Add event listeners
     socket.current.on("connect", onConnect)
     socket.current.on("disconnect", onDisconnect)
 
+    // Clean up event listeners
     return () => {
       socket.current.off("connect", onConnect)
       socket.current.off("disconnect", onDisconnect)
@@ -48,82 +60,61 @@ export function useChatQuery(groupId: string) {
 
   // Fetch room details
   useEffect(() => {
-    const fetchRoomDetails = async () => {
+    async function fetchRoomDetails() {
       try {
         const res = await fetch(`/api/rooms/${groupId}`)
-        if (!res.ok) throw new Error('Failed to fetch room details')
-        const data = await res.json()
-        setRoomTitle(data.room.title)
+        if (res.ok) {
+          const data = await res.json()
+          setRoomTitle(data.room.title)
+        }
       } catch (error) {
-        console.error('Error fetching room details:', error)
+        // Silently handle errors
       }
     }
+    
     fetchRoomDetails()
   }, [groupId])
 
-  // Set up socket event handlers
+  // Set up message handling
   useEffect(() => {
-    // When receiving a new message, update the query cache
+    // Handle new incoming messages
     function onNewMessage(message: ChatMessage) {
-      console.log(`Received new message: ${message.id}`)
-      queryClient.setQueryData(['messages', groupId], (oldData: ChatMessage[] | undefined) => {
-        return [...(oldData || []), message]
-      })
+      setMessages(prev => [...prev, message])
     }
 
-    // When initially fetching messages, set them in the query cache
+    // Handle initial message load
     function onFetchMessages(fetchedMessages: ChatMessage[]) {
-      console.log(`Received ${fetchedMessages.length} messages from event`)
       if (!messagesLoaded.current) {
-        queryClient.setQueryData(['messages', groupId], fetchedMessages)
+        setMessages(fetchedMessages)
         messagesLoaded.current = true
       }
     }
 
-    // Handle rate limiting and other errors
-    function onError(error: { type: string; message: string; retryAfter?: number }) {
-      if (error.type === "RATE_LIMIT_EXCEEDED") {
-        toast.error(error.message, {
-          duration: 5000,
-          icon: "🚫",
-        });
-      } else {
-        // Handle other types of errors
-        toast.error("An error occurred", {
-          description: error.message,
-        });
-      }
+    // Simple error handler
+    function onError(error: { type: string; message: string }) {
+      toast.error("Message Error", {
+        description: error.message,
+      })
     }
 
-    // Handle moderation events such as when users are rate-limited
-    function onModerationEvent(event: { type: string; user: string; message: string }) {
-      if (event.type === "USER_RATE_LIMITED") {
-        toast.info("Moderation Notice", {
-          description: event.message,
-          duration: 3000,
-        });
-      }
-    }
-
+    // Add event listeners
     socket.current.on("new_message", onNewMessage)
     socket.current.on("fetch_messages", onFetchMessages)
     socket.current.on("error", onError)
-    socket.current.on("moderation_event", onModerationEvent)
 
+    // Clean up event listeners
     return () => {
       socket.current.off("new_message", onNewMessage)
       socket.current.off("fetch_messages", onFetchMessages)
       socket.current.off("error", onError)
-      socket.current.off("moderation_event", onModerationEvent)
     }
-  }, [groupId, queryClient])
+  }, [groupId])
 
-  // Clean up on component unmount
+  // Clean up on unmount
   useEffect(() => {
     return () => {
       messagesLoaded.current = false
       if (socket.current.connected) {
-        console.log("Disconnecting socket on cleanup")
         socket.current.disconnect()
       }
     }
@@ -132,32 +123,23 @@ export function useChatQuery(groupId: string) {
   // Load messages when connected
   useEffect(() => {
     if (isConnected && !messagesLoaded.current) {
-      console.log("Explicitly requesting messages from server")
       socket.current.emit("fetch_messages", { room: groupId }, (fetchedMessages: ChatMessage[]) => {
-        console.log(`Received ${fetchedMessages.length} messages from callback`)
-        queryClient.setQueryData(['messages', groupId], fetchedMessages)
+        setMessages(fetchedMessages)
         messagesLoaded.current = true
       })
     }
-  }, [isConnected, groupId, queryClient])
+  }, [isConnected, groupId])
 
-  // Query for messages
-  const { data: messages = [] } = useQuery({
-    queryKey: ['messages', groupId],
-    queryFn: async () => {
-      return [] as ChatMessage[]
-    },
-    initialData: [],
-    enabled: false, // We'll manually manage this data with socket events
-  })
-
-  // Function to send messages without optimistic updates
+  // Function to send a message
   const sendMessage = (messageText: string) => {
+    // Validate message
     if (!messageText.trim() || !session?.user) return
     if (messageText.length > MAX_MESSAGE_LENGTH) return
 
+    // Get user email
     const userEmail = session.user.email || 'unknown@example.com'
 
+    // Create message object
     const message = {
       message: messageText,
       room: groupId,
@@ -168,7 +150,7 @@ export function useChatQuery(groupId: string) {
       }
     }
 
-    // Send the message via socket without optimistic updates
+    // Send via socket
     socket.current.emit("send_message", message, (error: any) => {
       if (error) {
         toast.error("Failed to send message: " + error.message)
@@ -176,6 +158,7 @@ export function useChatQuery(groupId: string) {
     })
   }
 
+  // Return everything needed by components
   return {
     messages,
     isConnected,

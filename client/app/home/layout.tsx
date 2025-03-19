@@ -1,41 +1,30 @@
 "use client";
 import { useState, useEffect, memo } from "react";
 import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar";
-import { UserRoundSearch, Settings, LogOut } from "lucide-react";
+import { LogOut, Info, BadgeCheck } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { signOut, useSession } from "next-auth/react";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
 type ExtendedUser = {
   id?: string | null;
-  email?: string | null;
   name?: string | null;
   avatar?: string | null;
 };
 
-// Create a memoized profile avatar component with stable rendering
 const ProfileAvatar = memo(({ user }: { user?: ExtendedUser }) => {
-  // Use a stable key based on the avatar URL without changing on every render
-  const avatarKey = user?.avatar || 'no-avatar';
   
   return (
     <div className="relative">
       <Avatar className="h-7 w-7 flex-shrink-0 border border-base-300">
-        {user?.avatar ? (
+        {user?.avatar && (
           <AvatarImage 
-            key={avatarKey}
             src={user.avatar}
-            alt={`${user?.email || "User"}'s avatar`}
             referrerPolicy="no-referrer"
           />
-        ) : (
-          <AvatarFallback className="bg-primary text-primary-content">
-            {(user?.name ? user.name.substring(0, 1).toUpperCase() : null) || 
-             (user?.email ? user.email.substring(0, 1).toUpperCase() : "U")}
-          </AvatarFallback>
         )}
       </Avatar>
     </div>
@@ -74,17 +63,17 @@ export default function HomeLayout({ children }: { children: React.ReactNode }) 
   
   const links = [
     {
-      label: "All Users",
-      href: "/all-users",
+      label: "Socials",
+      href: "/socials",
       icon: (
-        <UserRoundSearch className="text-sidebar-foreground h-6 w-6 flex-shrink-0" />
+        <BadgeCheck className="text-sidebar-foreground h-6 w-6 flex-shrink-0" />
       ),
     },
     {
-      label: "Settings",
-      href: "/settings",
+      label: "Info",
+      href: "/info",
       icon: (
-        <Settings className="text-sidebar-foreground h-6 w-6 flex-shrink-0" />
+        <Info className="text-sidebar-foreground h-6 w-6 flex-shrink-0" />
       ),
     },
     {
@@ -140,7 +129,7 @@ export default function HomeLayout({ children }: { children: React.ReactNode }) 
           <div className="pt-4 border-t border-gray-200 dark:border-gray-800 mt-4">
             <SidebarLink
               link={{
-                label: user?.name || user?.email?.split('@')[0] || "User Profile",
+                label: user?.name || "User Profile",
                 href: "/profile",
                 icon: <ProfileAvatar key={user?.id || 'no-user'} user={user} />
               }}

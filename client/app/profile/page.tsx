@@ -6,8 +6,15 @@ import { useRouter } from "next/navigation";
 import { Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+interface ExtendedUser {
+  id?: string | null;
+  email?: string | null;
+  name?: string | null;
+  avatar?: string | null;
+}
+
 export default function ProfilePage() {
-  const { data: session, status } = useSession();
+  const { data: session, status } = useSession() as { data: { user: ExtendedUser } | null, status: string };
   const router = useRouter();
 
   if (status === "loading") {
@@ -39,7 +46,7 @@ export default function ProfilePage() {
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="flex flex-col items-center space-y-4">
-            {session.user.avatar ? (
+            {session.user.avatar && (
               <img
                 src={session.user.avatar}
                 alt={`${session.user.email}'s avatar`}
@@ -49,14 +56,10 @@ export default function ProfilePage() {
                   e.currentTarget.src = "/avatar.png";
                 }}
               />
-            ) : (
-              <div className="h-32 w-32 rounded-full bg-primary text-primary-content flex items-center justify-center text-2xl font-semibold border border-base-300">
-                {session.user.email ? session.user.email.substring(0, 1).toUpperCase() : "U"}
-              </div>
             )}
             <div className="text-center">
               <h2 className="text-xl font-semibold">
-                {session.user.email?.split('@')[0] ?? "User"}
+                {session.user.name?? "User"}
               </h2>
               <p className="text-muted-foreground">{session.user.email}</p>
             </div>

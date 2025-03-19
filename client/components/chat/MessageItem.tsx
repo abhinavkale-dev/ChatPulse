@@ -9,20 +9,14 @@ import {
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
 import { ChatMessage } from "@/types/chat"
-import { useAvatar } from "@/hooks/useAvatar"
 
 interface MessageItemProps {
   message: ChatMessage
   isOwn: boolean
   sessionUserAvatar?: string
-  sessionUserEmail?: string
 }
 
-export function MessageItem({ message, isOwn, sessionUserAvatar, sessionUserEmail }: MessageItemProps) {
-  // Use our custom hook to handle avatar URLs consistently across browsers
-  const { avatarUrl: receiverAvatarUrl } = useAvatar(message.user.avatar);
-  const { avatarUrl: senderAvatarUrl } = useAvatar(sessionUserAvatar);
-  // Format message timestamp
+export function MessageItem({ message, isOwn, sessionUserAvatar }: MessageItemProps) {
   const formatMessageTime = (timestamp?: string) => {
     if (!timestamp) return "";
     const date = new Date(timestamp);
@@ -53,17 +47,18 @@ export function MessageItem({ message, isOwn, sessionUserAvatar, sessionUserEmai
         // If there's only a GIF with no text, display just the GIF with no padding
         if (!beforeText.trim() && !afterText.trim()) {
           return (
-            <div className="flex justify-center items-center w-full overflow-hidden p-2">
+            <div className="flex justify-center items-center w-full overflow-hidden">
               <img 
                 src={gifUrl} 
                 alt="GIF" 
-                className="w-full h-auto rounded-lg" 
+                className="w-full h-auto rounded-md" 
                 loading="lazy"
                 style={{ 
-                  minWidth: '250px',
-                  maxHeight: '350px',
+                  minWidth: '220px',
+                  maxHeight: '300px',
                   objectFit: 'contain',
-                  display: 'block'
+                  display: 'block',
+                  margin: 0
                 }}
               />
             </div>
@@ -74,17 +69,18 @@ export function MessageItem({ message, isOwn, sessionUserAvatar, sessionUserEmai
         return (
           <>
             {beforeText}
-            <div className="flex justify-center items-center w-full overflow-hidden p-2 my-1">
+            <div className="flex justify-center items-center w-full overflow-hidden my-1">
               <img 
                 src={gifUrl} 
                 alt="GIF" 
-                className="w-full h-auto rounded-lg" 
+                className="w-full h-auto rounded-md" 
                 loading="lazy"
                 style={{ 
-                  minWidth: '250px',
-                  maxHeight: '350px',
+                  minWidth: '220px',
+                  maxHeight: '300px',
                   objectFit: 'contain',
-                  display: 'block'
+                  display: 'block',
+                  margin: 0
                 }}
               />
             </div>
@@ -101,16 +97,16 @@ export function MessageItem({ message, isOwn, sessionUserAvatar, sessionUserEmai
   return (
     <ChatBubble variant={isOwn ? "sent" : "received"}>
       {!isOwn ? (
+        // For messages from other users
         <ChatBubbleAvatar 
-          src={receiverAvatarUrl}
+          src={message.user?.avatar}
           className="h-10 w-10"
-          fallback={message.user.email ? message.user.email.substring(0, 1).toUpperCase() : "U"}
         />
       ) : (
+        // For messages from the current user
         <ChatBubbleAvatar 
           className="h-10 w-10"
-          src={senderAvatarUrl} 
-          fallback={sessionUserEmail ? sessionUserEmail.substring(0, 1).toUpperCase() : "U"}
+          src={sessionUserAvatar}
         />
       )}
       <div className={cn(
@@ -121,7 +117,7 @@ export function MessageItem({ message, isOwn, sessionUserAvatar, sessionUserEmai
           "text-xs text-muted-foreground mb-1",
           isOwn ? "mr-1" : "ml-1"
         )}>
-          {message.user.email}
+          {message.user?.email || 'Unknown User'}
         </span>
         <ChatBubbleMessage variant={isOwn ? "sent" : "received"}>
           {renderMessageContent(message.message)}

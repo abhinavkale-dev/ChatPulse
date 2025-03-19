@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useChatQuery } from "@/hooks/useChatQuery"
+import { useChat } from "@/hooks/useChat"
 import { ChatHeader } from "./ChatHeader"
 import { MessageList } from "./MessageList"
 import { ChatInputArea } from "./ChatInputArea"
@@ -13,14 +13,13 @@ export default function ChatBase({ groupId }: { groupId: string }) {
     roomTitle,
     sendMessage,
     MAX_MESSAGE_LENGTH
-  } = useChatQuery(groupId)
+  } = useChat(groupId)
   
   const [messageText, setMessageText] = useState("")
 
   const handleSendMessage = () => {
     if (!messageText.trim() || messageText.length > MAX_MESSAGE_LENGTH) return
     
-    // Just send the message without optimistic updates
     sendMessage(messageText)
     
     // Clear the input field
