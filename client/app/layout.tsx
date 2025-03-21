@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     siteName: "ChatPulse",
     images: [
       {
-        url: "https://chat-pulse-gilt.vercel.app/banner.png",
+        url: "/banner.png", 
         width: 1200,
         height: 630,
         alt: "ChatPulse - A fast chat app",
@@ -44,7 +44,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "ChatPulse",
     description: "A fast chat app",
-    images: ["https://chat-pulse-gilt.vercel.app/banner.png"],
+    images: ["/banner.png"],
   },
 };
 
