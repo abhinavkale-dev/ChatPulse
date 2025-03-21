@@ -203,7 +203,7 @@ export const authOptions = {
       return session;
     },
     
-    async redirect({ url, baseUrl }: { url: string; baseUrl: string }) {
+    async redirect({ baseUrl }: { url?: string; baseUrl: string }) {
       // Always redirect to home page for simplicity and to avoid redirect loops
       return `${baseUrl}/home`;
     },
