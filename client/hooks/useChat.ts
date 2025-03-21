@@ -9,39 +9,29 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import posthog from 'posthog-js'
 
 export function useChat(groupId: string) {
-  // User session for authentication
+
   const { data: session } = useSession()
   
-  // Basic state
   const [isConnected, setIsConnected] = useState(false)
   const [roomTitle, setRoomTitle] = useState("")
   
-  // Maximum message length
   const MAX_MESSAGE_LENGTH = 500
   
-  // Socket connection
   const socket = useRef(getSocket())
   
-  // TanStack Query setup
   const queryClient = useQueryClient()
   
-  // Counter for generating unique IDs for optimistic updates
   const optimisticIdCounter = useRef(0)
   
-  // Set up socket connection
   useEffect(() => {
-    // Set room ID in socket auth
     socket.current.auth = { room: groupId }
     
-    // Connect socket if not connected
     if (!socket.current.connected) {
       socket.current.connect()
     }
 
-    // Connection event handlers
     function onConnect() {
       setIsConnected(true)
-      // Track room joining with PostHog
       posthog.capture('room_joined', {
         room_id: groupId,
       })
@@ -51,18 +41,15 @@ export function useChat(groupId: string) {
       setIsConnected(false)
     }
 
-    // Add event listeners
     socket.current.on("connect", onConnect)
     socket.current.on("disconnect", onDisconnect)
 
-    // Clean up event listeners
     return () => {
       socket.current.off("connect", onConnect)
       socket.current.off("disconnect", onDisconnect)
     }
   }, [groupId])
 
-  // Fetch room details
   useEffect(() => {
     async function fetchRoomDetails() {
       try {
@@ -71,21 +58,19 @@ export function useChat(groupId: string) {
           const data = await res.json()
           setRoomTitle(data.room.title)
         }
-      } catch (error) {
-        // Silently handle errors
+      } catch(error) {
+        console.error("Failed to fetch room details:", error)
       }
     }
     
     fetchRoomDetails()
   }, [groupId])
 
-  // Set up message handling with React Query
   const messagesQuery = useQuery({
     queryKey: ['messages', groupId],
     queryFn: async () => {
       return new Promise<ChatMessage[]>((resolve) => {
         socket.current.emit("fetch_messages", { room: groupId }, (fetchedMessages: ChatMessage[]) => {
-          // Track message history loaded with PostHog
           posthog.capture('messages_loaded', {
             room_id: groupId,
             message_count: fetchedMessages.length
@@ -97,58 +82,46 @@ export function useChat(groupId: string) {
     enabled: isConnected,
   })
 
-  // Simple error handler
   function onError(error: { type: string; message: string }) {
     toast.error("Message Error", {
       description: error.message,
     })
   }
 
-  // Set up socket event listeners
   useEffect(() => {
-    // Handle new incoming messages
     function onNewMessage(message: ChatMessage) {
-      // Use a stable update pattern that's less prone to race conditions
       queryClient.setQueryData(['messages', groupId], (oldData: ChatMessage[] | undefined) => {
         if (!oldData) return [message]
         
-        // Create a new array to avoid reference issues
         const newData = [...oldData]
         
-        // Find any temporary message that matches this one
         const tempIndex = newData.findIndex(m => 
           m.id.startsWith('temp-') && 
           m.message === message.message && 
           m.sender === message.sender
         )
         
-        // If we found a temporary message, replace it
         if (tempIndex !== -1) {
           newData[tempIndex] = message
           return newData
         }
         
-        // If this is a completely new message, check if it already exists by ID
         const exists = newData.some(m => m.id === message.id)
         if (exists) return newData
         
-        // Otherwise add it to the end
         return [...newData, message]
       })
     }
 
-    // Add event listeners
     socket.current.on("new_message", onNewMessage)
     socket.current.on("error", onError)
 
-    // Clean up event listeners
     return () => {
       socket.current.off("new_message", onNewMessage)
       socket.current.off("error", onError)
     }
   }, [groupId, queryClient])
 
-  // Clean up on unmount
   useEffect(() => {
     return () => {
       if (socket.current.connected) {
@@ -157,17 +130,13 @@ export function useChat(groupId: string) {
     }
   }, [])
 
-  // Mutation for sending messages with optimistic updates
   const sendMessageMutation = useMutation({
     mutationFn: async (messageText: string) => {
-      // Validate message
       if (!messageText.trim() || !session?.user) return
       if (messageText.length > MAX_MESSAGE_LENGTH) return
 
-      // Get user email
       const userEmail = session.user.email || 'unknown@example.com'
 
-      // Create message object
       const message = {
         message: messageText,
         room: groupId,
@@ -189,14 +158,10 @@ export function useChat(groupId: string) {
       })
     },
     onMutate: async (messageText) => {
-      // Cancel any outgoing refetches to avoid overwriting optimistic update
       await queryClient.cancelQueries({ queryKey: ['messages', groupId] })
-
-      // Create optimistic message
       if (!session?.user) return
       const userEmail = session.user.email || 'unknown@example.com'
       
-      // Generate a truly unique ID for the optimistic message
       const uniqueId = `temp-${Date.now()}-${optimisticIdCounter.current++}`
       
       const optimisticMessage: ChatMessage = {
@@ -211,7 +176,6 @@ export function useChat(groupId: string) {
         }
       }
 
-      // Add optimistic message to query data
       queryClient.setQueryData(['messages', groupId], (oldData: ChatMessage[] | undefined) => {
         return oldData ? [...oldData, optimisticMessage] : [optimisticMessage]
       })

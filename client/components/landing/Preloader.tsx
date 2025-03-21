@@ -5,7 +5,7 @@ import { useEffect, useState } from "react"
 
 export default function PreLoader() {
     const [show, setShow] = useState(true)
-    const words = ["Hello", "Bonjour", "Ciao", "Olà", "やあ", "Hallå", "Guten tag", "Hallo"]
+    const words = ["ChatPulse", "Lets GO!!!"]
     const [index, setIndex] = useState(0)
 
     useEffect(() => {
@@ -22,7 +22,7 @@ export default function PreLoader() {
         if(index == words.length - 1) return;
         setTimeout(() => {
             setIndex(index + 1)
-        }, index == 0 ? 1000 : 150)
+        }, index == 0 ? 1000 : 1500)
     }, [index])
 
     return (

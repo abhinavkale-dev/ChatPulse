@@ -85,21 +85,14 @@ export default function HomeLayout({ children }: { children: React.ReactNode }) 
     },
   ];
 
-  // Use a more efficient approach to refresh the UI without excessive API calls
   useEffect(() => {
-    // Only refresh the UI when the component mounts if we're authenticated
     if (status === "authenticated") {
-      // Just refresh the router without making API calls
-      // This will re-render components with the latest session data
       router.refresh();
     }
     
-    // Handle visibility changes (when returning to the tab)
     let lastRefresh = Date.now();
     const handleVisibilityChange = () => {
       const now = Date.now();
-      // Only refresh if it's been at least 10 seconds since the last refresh
-      // This prevents excessive refreshes and API rate limits
       if (document.visibilityState === 'visible' && 
           status === "authenticated" && 
           now - lastRefresh > 10000) {

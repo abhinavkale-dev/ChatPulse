@@ -126,7 +126,6 @@ function Home() {
         return;
       }
 
-      // Remove the room from the list
       setRooms(rooms.filter(room => room.id !== roomId));
       toast.success("Room deleted successfully");
     } catch (error) {

@@ -61,7 +61,6 @@ function Signup() {
   const onSubmit = async (values: z.infer<typeof signUpSchema>) => {
     setIsSubmitting(true);
     
-    // Track signup attempt
     posthog.capture('signup_started', {
       method: 'credentials',
     });
@@ -75,7 +74,6 @@ function Signup() {
       });
   
       if (result?.error) {
-        // Track failed signup
         posthog.capture('signup_failed', {
           method: 'credentials',
           error: result.error,
@@ -86,7 +84,6 @@ function Signup() {
         });
         console.error("Signup error:", result.error);
       } else {
-        // Track successful signup
         posthog.capture('signup_successful', {
           method: 'credentials',
         });
@@ -104,7 +101,6 @@ function Signup() {
   };
 
   const handleGoogleSignup = () => {
-    // Track Google signup
     posthog.capture('signup_started', {
       method: 'google'
     });

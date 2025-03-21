@@ -67,7 +67,6 @@ function Signin() {
       });
 
       if (result?.error) {
-        // Track failed login attempts
         posthog.capture('login_failed', {
           method: 'credentials',
           error: result.error,
@@ -78,7 +77,6 @@ function Signin() {
         });
         console.error("Sign in error:", result.error);
       } else {
-        // Track successful logins
         posthog.capture('login_successful', {
           method: 'credentials',
         });
@@ -96,7 +94,6 @@ function Signin() {
   };
 
   const handleGoogleSignin = () => {
-    // Track Google sign in attempts
     posthog.capture('login_started', {
       method: 'google',
     });

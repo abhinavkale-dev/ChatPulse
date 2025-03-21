@@ -12,7 +12,6 @@ const Hero: React.FC = () => {
   const router = useRouter();
   
   useEffect(() => {
-    // Track landing page view
     posthog.capture('landing_page_viewed', {
       referrer: document.referrer,
       timestamp: new Date().toISOString()
@@ -44,7 +43,6 @@ const Hero: React.FC = () => {
               
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                 <InteractiveHoverButton onClick={() => {
-                  // Track CTA button click
                   posthog.capture('cta_clicked', {
                     button_text: 'Get Started',
                     destination: '/signin'

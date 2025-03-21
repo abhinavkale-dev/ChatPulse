@@ -33,7 +33,6 @@ export async function DELETE(
       return NextResponse.json({ error: "Room not found" }, { status: 404 })
     }
 
-    // Get the user
     const user = await prisma.user.findUnique({
       where: { email: userEmail },
       select: { id: true }
@@ -51,7 +50,6 @@ export async function DELETE(
       )
     }
 
-    // Delete the room
     await prisma.chatGroup.delete({
       where: { id: roomId }
     })
@@ -78,7 +76,6 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Get the room
     const room = await prisma.chatGroup.findUnique({
       where: { id: roomId },
       select: { 

@@ -3,10 +3,9 @@ import { authOptions } from "@/app/lib/auth";
 import prisma from "@/app/lib/prisma"
 import { NextRequest, NextResponse } from "next/server";
 
-// Rate limiting configuration for room creation
 const ROOM_CREATION_RATE_LIMIT = {
-  MAX_ROOMS: 2,      // Maximum rooms allowed to be created in the time window
-  TIME_WINDOW: 3600, // Time window in seconds (1 hour)
+  MAX_ROOMS: 2,    
+  TIME_WINDOW: 3600
 };
 
 export async function GET() {
@@ -71,10 +70,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({error: "User not found"}, {status: 404})
     }
 
-    // Check rate limit for room creation
     const oneHourAgo = new Date(Date.now() - ROOM_CREATION_RATE_LIMIT.TIME_WINDOW * 1000);
     
-    // Count rooms created by this user in the last hour
     const recentRoomsCount = await prisma.chatGroup.count({
       where: {
         userId: user.id,
@@ -84,7 +81,6 @@ export async function POST(req: NextRequest) {
       }
     });
 
-    // If user has exceeded the rate limit
     if (recentRoomsCount >= ROOM_CREATION_RATE_LIMIT.MAX_ROOMS) {
       return NextResponse.json(
         { 
@@ -110,14 +106,13 @@ export async function POST(req: NextRequest) {
       }
     })
 
-    // Format the response to match GET endpoint
     const formattedRoom = {
       id: room.id,
       userId: room.userId,
       title: room.title,
       createdAt: room.createdAt,
       updatedAt: room.updatedAt,
-      totalParticipants: 0 // New room starts with 0 participants
+      totalParticipants: 0
     }
 
     return NextResponse.json({ room: formattedRoom })

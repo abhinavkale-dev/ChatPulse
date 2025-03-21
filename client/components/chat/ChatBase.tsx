@@ -22,7 +22,6 @@ export default function ChatBase({ groupId }: { groupId: string }) {
     
     sendMessage(messageText)
     
-    // Clear the input field
     setMessageText("")
   }
 

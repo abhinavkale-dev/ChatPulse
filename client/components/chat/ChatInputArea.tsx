@@ -25,7 +25,6 @@ export function ChatInputArea({
 
   const handleMessageChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value
-    // Limit input to max characters
     if (value.length <= maxMessageLength) {
       setMessageText(value)
     }
@@ -88,17 +87,15 @@ export function ChatInputArea({
             {showGifPicker && (
               <div className="absolute bottom-full left-0 mb-2 bg-background border rounded-lg p-0 w-[280px] h-[380px] overflow-hidden shadow-lg z-50">
                 <div className="text-sm h-full">
-                  {/* Simple GIF picker with minimal configuration */}
                   <GifPicker 
                     tenorApiKey={process.env.NEXT_PUBLIC_TENOR_API_KEY || ''} 
                     onGifClick={(gif) => {
-                      // Add the selected GIF URL to the message text without extra spaces
-                      setMessageText(gif.url) // Just set the URL as the message
-                      setShowGifPicker(false) // Close the picker after selection
+                      setMessageText(gif.url)
+                      setShowGifPicker(false)
                     }}
-                    width={280} // Slightly reduced width to ensure it fits
-                    height={380} // Slightly reduced height
-                    theme={Theme.DARK} // Match app's dark theme
+                    width={280}
+                    height={380}
+                    theme={Theme.DARK}
                   />
                 </div>
               </div>

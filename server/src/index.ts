@@ -22,7 +22,6 @@ const io = new Server(server,{
 
 app.use(cors())
 
-// Initialize the database cleanup cron job
 setupCleanupJob();
 
 server.listen(port, () => {

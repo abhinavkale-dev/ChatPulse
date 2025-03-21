@@ -1,17 +1,13 @@
 import cron from 'node-cron';
-import prisma from './lib/prisma.server'; // Adjusted to match your Prisma path
+import prisma from './lib/prisma.server';
 
-// Set retention period for chat groups (in days)
-const CHAT_GROUP_RETENTION_DAYS = 60; // 2 months
+const CHAT_GROUP_RETENTION_DAYS = 60;
 
-// Function to delete old chat groups that haven't been used in the specified retention period
 async function cleanupOldChatGroups(): Promise<void> {
   try {
-    // Calculate the cutoff date (current date minus retention period)
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - CHAT_GROUP_RETENTION_DAYS);
     
-    // Find chat groups older than the retention period
     const oldGroups = await prisma.chatGroup.findMany({
       where: {
         updatedAt: {
@@ -32,7 +28,6 @@ async function cleanupOldChatGroups(): Promise<void> {
     
     console.log(`Found ${oldGroupIds.length} chat groups older than ${CHAT_GROUP_RETENTION_DAYS} days`);
     
-    // First delete all messages in these groups
     const deletedMessages = await prisma.chatMessage.deleteMany({
       where: {
         chatGroupId: {
@@ -41,7 +36,6 @@ async function cleanupOldChatGroups(): Promise<void> {
       }
     });
     
-    // Then delete the groups themselves
     const deletedGroups = await prisma.chatGroup.deleteMany({
       where: {
         id: {
@@ -56,10 +50,7 @@ async function cleanupOldChatGroups(): Promise<void> {
   }
 }
 
-// Function to setup the cleanup cron job
 export function setupCleanupJob(): void {
-  // Schedule the chat group cleanup job to run on the 1st day of every other month at 2:00 AM
-  // The '0 2 1 */2 *' cron expression means: At 2:00 AM, on the 1st day of the month, every 2 months
   cron.schedule('0 2 1 */2 *', async () => {
     console.log('Running chat group cleanup job');
     await cleanupOldChatGroups();
