@@ -55,9 +55,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <head>
-          <link href="https://cdn.jsdelivr.net/npm/remixicon@3.6.0/fonts/remixicon.css" rel="stylesheet" />
-      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background`}
       >
