@@ -35,7 +35,8 @@ export async function middleware(request: NextRequest) {
 
   if (!isPublicPath && !token) {
     const url = new URL('/signin', request.url);
-    url.searchParams.set('callbackUrl', encodeURI(request.url));
+    // Only set the pathname as the callback URL, not the full URL
+    url.searchParams.set('callbackUrl', '/home');
     return NextResponse.redirect(url);
   }
   
