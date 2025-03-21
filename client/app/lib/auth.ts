@@ -204,15 +204,7 @@ export const authOptions = {
     },
     
     async redirect({ url, baseUrl }: { url: string; baseUrl: string }) {
-      // Handle redirects after sign-in
-      if (url.startsWith(baseUrl)) {
-        // If the URL is internal, allow it
-        return url;
-      } else if (url.startsWith('/')) {
-        // If the URL is relative, prepend the base URL
-        return `${baseUrl}${url}`;
-      }
-      // Default to the home page
+      // Always redirect to home page for simplicity and to avoid redirect loops
       return `${baseUrl}/home`;
     },
   },

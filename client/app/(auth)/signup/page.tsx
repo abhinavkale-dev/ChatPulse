@@ -21,14 +21,10 @@ import { signIn, useSession } from "next-auth/react";
 import { FcGoogle } from "react-icons/fc";
 import { useRouter } from "next/navigation";
 import type { z } from "zod";
-import posthog from 'posthog-js';
+
 
 export default function SignupPage() {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
-      <Signup />
-    </div>
-  );
+  return <Signup />;
 }
 
 function Signup() {
@@ -61,10 +57,6 @@ function Signup() {
   const onSubmit = async (values: z.infer<typeof signUpSchema>) => {
     setIsSubmitting(true);
     
-    posthog.capture('signup_started', {
-      method: 'credentials',
-    });
-  
     try {
       const result = await signIn("credentials", {
         email: values.email,
@@ -75,20 +67,11 @@ function Signup() {
       });
   
       if (result?.error) {
-        posthog.capture('signup_failed', {
-          method: 'credentials',
-          error: result.error,
-        });
-        
         toast.error("Signup Failed", {
           description: result.error
         });
         console.error("Signup error:", result.error);
       } else {
-        posthog.capture('signup_successful', {
-          method: 'credentials',
-        });
-        
         router.push("/home");
       }
     } catch (error) {
@@ -102,10 +85,6 @@ function Signup() {
   };
 
   const handleGoogleSignup = () => {
-    posthog.capture('signup_started', {
-      method: 'google'
-    });
-    
     signIn("google", {
       callbackUrl: "/home"
     });
