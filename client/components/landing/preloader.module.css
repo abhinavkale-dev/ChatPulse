@@ -1,0 +1,40 @@
+.introduction {
+    position: fixed;
+    inset: 0;
+    background-color: #141516;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+}
+
+.introduction p {
+    display: flex;
+    color: white;
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin: 0;
+    position: relative;
+    z-index: 1;
+}
+
+.introduction p span {
+    margin-right: 5px;
+}
+
+.introduction svg {
+    position: absolute;
+    top: 0;
+    width: 100%;
+    height: calc(100% + 300px);
+}
+
+.introduction svg path {
+    fill: #141516;
+}
+
+@media (min-width: 768px) {
+    .introduction p {
+        font-size: 3rem;
+    }
+}
