@@ -45,12 +45,17 @@ function Signin() {
   }, [status, router]);
 
   if (status === 'loading') {
-    return null;
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-2">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-foreground">Loading...</p>
+        </div>
+      </div>
+    );
   }
 
-  if (status === 'authenticated') {
-    return null;
-  }
+  // The useEffect above will handle redirection if authenticated
 
   const onSubmit = async (values: z.infer<typeof signInSchema>) => {
     setIsSubmitting(true);
