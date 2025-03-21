@@ -20,7 +20,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Input } from '@/components/ui/input'
-import { useSession } from 'next-auth/react'
+import { useSession, signIn } from 'next-auth/react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from "sonner"
 
@@ -34,13 +34,7 @@ interface ChatGroup {
 }
 
 function Home() {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { data: _session } = useSession({
-    required: true,
-    onUnauthenticated() {
-      window.location.href = '/signin';
-    },
-  })
+  const { status } = useSession()
   const [rooms, setRooms] = useState<ChatGroup[]>([])
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -49,6 +43,12 @@ function Home() {
   const [isCreating, setIsCreating] = useState(false)
 
   useEffect(() => {
+    if (status === 'unauthenticated') {
+      signIn();
+      return;
+    }
+    
+
     const fetchRooms = async () => {
       try {
         setIsLoading(true)
