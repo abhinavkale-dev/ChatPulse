@@ -14,14 +14,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.setupCleanupJob = setupCleanupJob;
 const node_cron_1 = __importDefault(require("node-cron"));
-const prisma_server_1 = __importDefault(require("./lib/prisma.server"));
+const prisma_server_1 = require("./lib/prisma.server");
 const CHAT_GROUP_RETENTION_DAYS = 60;
 function cleanupOldChatGroups() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const cutoffDate = new Date();
             cutoffDate.setDate(cutoffDate.getDate() - CHAT_GROUP_RETENTION_DAYS);
-            const oldGroups = yield prisma_server_1.default.chatGroup.findMany({
+            const oldGroups = yield prisma_server_1.db.chatGroup.findMany({
                 where: {
                     updatedAt: {
                         lt: cutoffDate
@@ -37,14 +37,14 @@ function cleanupOldChatGroups() {
                 return;
             }
             console.log(`Found ${oldGroupIds.length} chat groups older than ${CHAT_GROUP_RETENTION_DAYS} days`);
-            const deletedMessages = yield prisma_server_1.default.chatMessage.deleteMany({
+            const deletedMessages = yield prisma_server_1.db.chatMessage.deleteMany({
                 where: {
                     chatGroupId: {
                         in: oldGroupIds
                     }
                 }
             });
-            const deletedGroups = yield prisma_server_1.default.chatGroup.deleteMany({
+            const deletedGroups = yield prisma_server_1.db.chatGroup.deleteMany({
                 where: {
                     id: {
                         in: oldGroupIds
