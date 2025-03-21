@@ -119,6 +119,10 @@ export const authOptions = {
   ],
 
   secret: process.env.NEXTAUTH_SECRET,
+  session: {
+    strategy: "jwt" as const,
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
 
   callbacks: {
     async signIn({
@@ -157,7 +161,7 @@ export const authOptions = {
           return true;
         } catch (error) {
           console.error("Error in signIn callback:", error);
-          return `/auth/signin?error=Failed to create user account`;
+          return false; // Return false instead of a redirect URL to handle errors properly
         }
       }
       return true;
@@ -203,9 +207,9 @@ export const authOptions = {
       return session;
     },
     
-    async redirect({ baseUrl }: { url?: string; baseUrl: string }) {
-      // Always redirect to home page for simplicity and to avoid redirect loops
-      return `${baseUrl}/home`;
+    async redirect({ url, baseUrl }: { url?: string; baseUrl: string }) {
+      // Use the provided callback URL if available, otherwise default to home page
+      return url || `${baseUrl}/home`;
     },
   },
   

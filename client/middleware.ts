@@ -19,9 +19,11 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/api/auth/')
   );
   
+  // Improved token retrieval with secure flag
   const token = await getToken({ 
     req: request,
-    secret: process.env.NEXTAUTH_SECRET
+    secret: process.env.NEXTAUTH_SECRET,
+    secureCookie: process.env.NODE_ENV === 'production'
   });
   
   const isAuthRoute = pathname.startsWith('/signin') || pathname.startsWith('/signup');
@@ -33,8 +35,10 @@ export async function middleware(request: NextRequest) {
 
   // Protect private routes
   if (!isPublicPath && !token) {
-    // Simplified redirect with fixed destination
-    return NextResponse.redirect(new URL('/signin', request.url));
+    // Store the original URL to redirect back after authentication
+    const signInUrl = new URL('/signin', request.url);
+    signInUrl.searchParams.set('callbackUrl', request.url);
+    return NextResponse.redirect(signInUrl);
   }
   
   return NextResponse.next();

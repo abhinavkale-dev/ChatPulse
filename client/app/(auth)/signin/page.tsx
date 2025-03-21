@@ -60,11 +60,11 @@ function Signin() {
   const onSubmit = async (values: z.infer<typeof signInSchema>) => {
     setIsSubmitting(true);
     try {
-      // Set redirect to false to handle errors manually
       const result = await signIn("credentials", {
         email: values.email,
         password: values.password,
-        redirect: false
+        redirect: false,
+        callbackUrl: "/home"
       });
 
       if (result?.error) {
@@ -83,7 +83,9 @@ function Signin() {
         console.error("Sign in error:", result.error);
       } else {
         // Successful login, redirect manually
-        router.push("/home");
+        toast.success("Sign in successful");
+        // Force a refresh of the session before redirecting
+        window.location.href = "/home";
       }
     } catch (error) {
       console.error("Sign in error:", error);
