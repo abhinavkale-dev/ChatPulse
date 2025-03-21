@@ -202,6 +202,19 @@ export const authOptions = {
       }
       return session;
     },
+    
+    async redirect({ url, baseUrl }: { url: string; baseUrl: string }) {
+      // Handle redirects after sign-in
+      if (url.startsWith(baseUrl)) {
+        // If the URL is internal, allow it
+        return url;
+      } else if (url.startsWith('/')) {
+        // If the URL is relative, prepend the base URL
+        return `${baseUrl}${url}`;
+      }
+      // Default to the home page
+      return `${baseUrl}/home`;
+    },
   },
   
   pages: {
