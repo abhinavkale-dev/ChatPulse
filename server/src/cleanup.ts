@@ -1,5 +1,5 @@
 import cron from 'node-cron';
-import { db } from './lib/prisma.server';
+import prisma from './lib/prisma.server';
 
 const CHAT_GROUP_RETENTION_DAYS = 60;
 
@@ -8,7 +8,7 @@ async function cleanupOldChatGroups(): Promise<void> {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - CHAT_GROUP_RETENTION_DAYS);
     
-    const oldGroups = await db.chatGroup.findMany({
+    const oldGroups = await prisma.chatGroup.findMany({
       where: {
         updatedAt: {
           lt: cutoffDate
@@ -28,7 +28,7 @@ async function cleanupOldChatGroups(): Promise<void> {
     
     console.log(`Found ${oldGroupIds.length} chat groups older than ${CHAT_GROUP_RETENTION_DAYS} days`);
     
-    const deletedMessages = await db.chatMessage.deleteMany({
+    const deletedMessages = await prisma.chatMessage.deleteMany({
       where: {
         chatGroupId: {
           in: oldGroupIds
@@ -36,7 +36,7 @@ async function cleanupOldChatGroups(): Promise<void> {
       }
     });
     
-    const deletedGroups = await db.chatGroup.deleteMany({
+    const deletedGroups = await prisma.chatGroup.deleteMany({
       where: {
         id: {
           in: oldGroupIds

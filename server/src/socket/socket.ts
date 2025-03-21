@@ -1,5 +1,5 @@
-import { Server as SocketIOServer, Socket } from "socket.io";
-import { db } from "../lib/prisma.server";
+import { Server, Socket } from "socket.io";
+import prisma from "../lib/prisma.server";
 import redis from "../redis/redis";
 
 interface ChatMessageRecord {
@@ -74,7 +74,7 @@ async function getMessagesForRoom(room: string): Promise<ChatMessage[]> {
       return JSON.parse(cached);
     }
     console.log(`Cache miss for room: ${room}, fetching from DB`);
-    const messagesFromDB = await db.chatMessage.findMany({
+    const messagesFromDB = await prisma.chatMessage.findMany({
       where: { chatGroupId: room },
       orderBy: { createdAt: "asc" },
     });
@@ -83,7 +83,7 @@ async function getMessagesForRoom(room: string): Promise<ChatMessage[]> {
     return formattedMessages;
   } catch (error) {
     console.error("Error fetching messages:", error);
-    const messagesFromDB = await db.chatMessage.findMany({
+    const messagesFromDB = await prisma.chatMessage.findMany({
       where: { chatGroupId: room },
       orderBy: { createdAt: "asc" },
     });
@@ -91,8 +91,8 @@ async function getMessagesForRoom(room: string): Promise<ChatMessage[]> {
   }
 }
 
-export function setupSocket(io: SocketIOServer): void {
-  io.use((socket: CustomSocket, next: (err?: Error | undefined) => void) => {
+export function setupSocket(io: Server): void {
+  io.use((socket: CustomSocket, next) => {
     const room = socket.handshake.auth.room as string | undefined;
     if (room) {
       socket.room = room;
@@ -126,10 +126,10 @@ export function setupSocket(io: SocketIOServer): void {
 
       try {
 
-        const user = await db.user.findUnique({ where: { email: userInfo.email } });
+        const user = await prisma.user.findUnique({ where: { email: userInfo.email } });
         if (!user) throw new Error(`User with email ${userInfo.email} not found`);
 
-        const savedMessage = await db.chatMessage.create({
+        const savedMessage = await prisma.chatMessage.create({
           data: {
             chatGroupId: data.room,
             sender: data.sender,
