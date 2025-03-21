@@ -21,6 +21,7 @@ import { signIn, useSession } from "next-auth/react";
 import { FcGoogle } from "react-icons/fc";
 import { useRouter } from "next/navigation";
 import type { z } from "zod";
+import { usePostHog } from 'posthog-js/react';
 
 
 export default function SignupPage() {
@@ -31,6 +32,7 @@ function Signup() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
   const { status } = useSession();
+  const posthog = usePostHog();
   const form = useForm<z.infer<typeof signUpSchema>>({
     resolver: zodResolver(signUpSchema),
     defaultValues: {
@@ -57,29 +59,38 @@ function Signup() {
     );
   }
 
-  // The useEffect above will handle redirection if authenticated
-
   const onSubmit = async (values: z.infer<typeof signUpSchema>) => {
     setIsSubmitting(true);
+  
+    posthog.capture('signup_attempt', {
+      method: 'credentials'
+    });
     
     try {
       const result = await signIn("credentials", {
         email: values.email,
         password: values.password,
         confirmPassword: values.confirmPassword,
-        redirect: false,  // Don't redirect automatically
+        redirect: false,
         callbackUrl: "/home"
       });
   
       if (result?.error) {
+        posthog.capture('signup_failed', {
+          error: result.error,
+          method: 'credentials'
+        });
+        
         toast.error("Signup Failed", {
           description: result.error
         });
         console.error("Signup error:", result.error);
       } else {
-        // If account creation was successful, redirect to home
+        posthog.capture('signup_successful', {
+          method: 'credentials'
+        });
+        
         toast.success("Account created successfully!");
-        // Force a refresh of the session before redirecting
         window.location.href = "/home";
       }
     } catch (error) {
@@ -93,6 +104,10 @@ function Signup() {
   };
 
   const handleGoogleSignup = () => {
+    posthog.capture('signup_attempt', {
+      method: 'google'
+    });
+    
     signIn("google", {
       callbackUrl: "/home"
     });

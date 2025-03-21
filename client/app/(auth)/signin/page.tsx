@@ -21,6 +21,7 @@ import { signIn, useSession } from "next-auth/react";
 import { FcGoogle } from "react-icons/fc";
 import { useRouter } from "next/navigation";
 import type { z } from "zod";
+import { usePostHog } from 'posthog-js/react';
 
 export default function SigninPage() {
   return <Signin />;
@@ -30,6 +31,7 @@ function Signin() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
   const { status } = useSession();
+  const posthog = usePostHog();
   const form = useForm<z.infer<typeof signInSchema>>({
     resolver: zodResolver(signInSchema),
     defaultValues: {
@@ -55,8 +57,6 @@ function Signin() {
     );
   }
 
-  // The useEffect above will handle redirection if authenticated
-
   const onSubmit = async (values: z.infer<typeof signInSchema>) => {
     setIsSubmitting(true);
     try {
@@ -68,23 +68,21 @@ function Signin() {
       });
 
       if (result?.error) {
-        // Show appropriate error message based on error type
-        let errorMessage = result.error;
-        
-        if (result.error.includes("No user found")) {
-          errorMessage = "Account not found. Please sign up first.";
-        } else if (result.error.includes("Invalid password")) {
-          errorMessage = "Invalid credentials. Please check your email and password.";
-        }
+        posthog.capture('signin_failed', {
+          error: result.error,
+          method: 'credentials'
+        });
         
         toast.error("Sign In Failed", {
-          description: errorMessage
+          description: result.error
         });
         console.error("Sign in error:", result.error);
       } else {
-        // Successful login, redirect manually
+        posthog.capture('signin_successful', {
+          method: 'credentials'
+        });
+        
         toast.success("Sign in successful");
-        // Force a refresh of the session before redirecting
         window.location.href = "/home";
       }
     } catch (error) {
@@ -98,7 +96,9 @@ function Signin() {
   };
 
   const handleGoogleSignin = () => {
-
+    posthog.capture('signin_attempt', {
+      method: 'google'
+    });
     
     signIn("google", {
       callbackUrl: "/home"
