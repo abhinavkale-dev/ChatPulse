@@ -63,16 +63,17 @@ export const authOptions = {
           throw new Error("Email and password are required.");
         }
 
-
         await checkIfEmailUsedWithGoogle(email);
 
+        // Check if this is a signup request (has confirmPassword)
         if (confirmPassword) {
-
+          console.log("Processing signup request", { email });
+          // This is a signup request
           signUpSchema.parse({ email, password, confirmPassword });
 
           const existingUser = await prisma.user.findUnique({ where: { email } });
           if (existingUser) {
-            return null;  
+            throw new Error("Email already registered. Please use a different email or sign in.");
           }
 
           const hashedPassword = await bcrypt.hash(password, 10);

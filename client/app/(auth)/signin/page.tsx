@@ -60,18 +60,30 @@ function Signin() {
   const onSubmit = async (values: z.infer<typeof signInSchema>) => {
     setIsSubmitting(true);
     try {
+      // Set redirect to false to handle errors manually
       const result = await signIn("credentials", {
         email: values.email,
         password: values.password,
-        redirect: true,
-        callbackUrl: "/home",
+        redirect: false
       });
 
       if (result?.error) {
+        // Show appropriate error message based on error type
+        let errorMessage = result.error;
+        
+        if (result.error.includes("No user found")) {
+          errorMessage = "Account not found. Please sign up first.";
+        } else if (result.error.includes("Invalid password")) {
+          errorMessage = "Invalid credentials. Please check your email and password.";
+        }
+        
         toast.error("Sign In Failed", {
-          description: result.error
+          description: errorMessage
         });
         console.error("Sign in error:", result.error);
+      } else {
+        // Successful login, redirect manually
+        router.push("/home");
       }
     } catch (error) {
       console.error("Sign in error:", error);

@@ -63,12 +63,12 @@ function Signup() {
     setIsSubmitting(true);
     
     try {
+      // First attempt to create the account
       const result = await signIn("credentials", {
         email: values.email,
         password: values.password,
         confirmPassword: values.confirmPassword,
-        redirect: true,
-        callbackUrl: "/home",
+        redirect: false  // Don't redirect automatically
       });
   
       if (result?.error) {
@@ -77,6 +77,8 @@ function Signup() {
         });
         console.error("Signup error:", result.error);
       } else {
+        // If account creation was successful, redirect to home
+        toast.success("Account created successfully!");
         router.push("/home");
       }
     } catch (error) {
@@ -90,6 +92,7 @@ function Signup() {
   };
 
   const handleGoogleSignup = () => {
+    // Google auth is handled by the provider itself
     signIn("google", {
       callbackUrl: "/home"
     });
