@@ -1,7 +1,0 @@
-services:
-  - type: web
-    name: chatpulse-server
-    runtime: node
-    rootDir: server
-    buildCommand: npm run build
-    startCommand: npm run start
