@@ -22,7 +22,21 @@ export const metadata: Metadata = {
 
   icons: {
     icon: {url: '/logo.svg', type: 'image/svg+xml'}
-  }
+  },
+  openGraph: {
+    title: "ChatPulse",
+    description: "A fast chat app",
+    url: "https://chat-pulse-gilt.vercel.app/",
+    images: [
+      {
+        url: "/banner.png",
+        width: 1200,
+        height: 630,
+        alt: "ChatPulse - A fast chat app",
+      },
+    ],
+    type: "website",
+  },
 };
 
 export default function RootLayout({
