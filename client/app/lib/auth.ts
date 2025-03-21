@@ -65,7 +65,6 @@ export const authOptions = {
 
         await checkIfEmailUsedWithGoogle(email);
 
-        // Check if this is a signup request (has confirmPassword)
         if (confirmPassword) {
           console.log("Processing signup request", { email });
           // This is a signup request
