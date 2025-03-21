@@ -41,7 +41,7 @@ const Hero: React.FC = () => {
                 Create private chat rooms for friends, teammates, or communities. Share ideas, collaborate, and connect with seamless real-time messaging.
               </p>
               
-              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+              <div className="w-full flex justify-center lg:justify-start">
                 <InteractiveHoverButton onClick={() => {
                   posthog.capture('cta_clicked', {
                     button_text: 'Get Started',
