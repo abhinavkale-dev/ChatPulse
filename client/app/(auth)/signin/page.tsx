@@ -63,7 +63,8 @@ function Signin() {
       const result = await signIn("credentials", {
         email: values.email,
         password: values.password,
-        redirect: false,
+        redirect: true,
+        callbackUrl: "/home",
       });
 
       if (result?.error) {
@@ -80,8 +81,6 @@ function Signin() {
         posthog.capture('login_successful', {
           method: 'credentials',
         });
-        
-        router.push("/home");
       }
     } catch (error) {
       console.error("Sign in error:", error);
