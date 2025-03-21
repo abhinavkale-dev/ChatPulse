@@ -9,6 +9,7 @@ import {
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
 import { ChatMessage } from "@/types/chat"
+import Image from "next/image"
 
 interface MessageItemProps {
   message: ChatMessage
@@ -48,7 +49,9 @@ export function MessageItem({ message, isOwn, sessionUserAvatar }: MessageItemPr
         if (!beforeText.trim() && !afterText.trim()) {
           return (
             <div className="flex justify-center items-center w-full overflow-hidden">
-              <img 
+              <Image 
+                width={200}
+                height={200}
                 src={gifUrl} 
                 alt="GIF" 
                 className="w-full h-auto rounded-md" 
@@ -70,7 +73,9 @@ export function MessageItem({ message, isOwn, sessionUserAvatar }: MessageItemPr
           <>
             {beforeText}
             <div className="flex justify-center items-center w-full overflow-hidden my-1">
-              <img 
+              <Image 
+                width={200}
+                height={200}
                 src={gifUrl} 
                 alt="GIF" 
                 className="w-full h-auto rounded-md" 

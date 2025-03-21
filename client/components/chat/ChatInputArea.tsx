@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { ChatInput } from "@/components/ui/chat-input"
 import { Button } from "@/components/ui/button"
-import { Send, Smile, Image } from "lucide-react"
+import { Send, Smile, Image as ImageIcon } from "lucide-react"
 import EmojiPicker, { Theme } from 'emoji-picker-react'
 import GifPicker from 'gif-picker-react'
 
@@ -76,7 +76,7 @@ export function ChatInputArea({
                   setShowEmojiPicker(false)
                 }}
               >
-                <Image className="h-4 w-4" />
+                <ImageIcon className="h-4 w-4" />
               </Button>
             </div>
             {showEmojiPicker && (

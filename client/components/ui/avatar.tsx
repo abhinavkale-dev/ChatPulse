@@ -24,19 +24,15 @@ const AvatarImage = React.forwardRef<
   React.ElementRef<typeof AvatarPrimitive.Image>,
   React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Image>
 >(({ className, ...props }, ref) => {
-  // Track if the image has loaded or errored
+
   const [hasError, setHasError] = React.useState(false);
   
-  // Handle image load error
-  const handleError = (e: React.SyntheticEvent<HTMLImageElement>) => {
-    // In Safari, setting src in the error handler can cause infinite loops
-    // Instead, we'll just hide this image and let the fallback show
+
+  const handleError = () => {
     setHasError(true);
   };
   
   if (hasError) {
-    // If there's an error, don't render the image at all
-    // This allows the fallback to show
     return null;
   }
   

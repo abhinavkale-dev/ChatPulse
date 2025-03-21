@@ -1,5 +1,6 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
+import Image from 'next/image';
 
 type Message = {
   id: number;
@@ -59,8 +60,10 @@ const ChatDemo: React.FC = () => {
               )}
             >
               {message.avatar && (
-                <img
+                <Image
                   src={message.avatar}
+                  width={200}
+                  height={200}
                   alt="avatar"
                   className="w-8 h-8 rounded-full object-cover"
                 />

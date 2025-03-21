@@ -23,7 +23,7 @@ export default function PreLoader() {
         setTimeout(() => {
             setIndex(index + 1)
         }, index == 0 ? 1000 : 1500)
-    }, [index])
+    }, [index, words.length])
 
     return (
         <AnimatePresence mode="wait">

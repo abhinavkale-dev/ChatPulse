@@ -25,7 +25,6 @@ const io = new socket_io_1.Server(server, {
 });
 exports.io = io;
 app.use((0, cors_1.default)());
-// Initialize the database cleanup cron job
 (0, cleanup_1.setupCleanupJob)();
 server.listen(port, () => {
     console.log(`Server is running on port ${port}`);

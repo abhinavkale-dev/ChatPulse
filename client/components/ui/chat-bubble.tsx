@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { MessageLoading } from "@/components/ui/message-loading";
+import Image from "next/image"
 
 interface ChatBubbleProps {
   variant?: "sent" | "received"
@@ -78,7 +79,7 @@ export function ChatBubbleAvatar({
     <Avatar className={cn("h-8 w-8", className)}>
       <AvatarImage src={src || "/avatar.png"} />
       <AvatarFallback>
-        <img src="/avatar.png" alt="default avatar" />
+        <Image src="/avatar.png" alt="default avatar" width={200} height={200} />
       </AvatarFallback>
     </Avatar>
   )

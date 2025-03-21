@@ -67,7 +67,7 @@ function Home() {
       }
     }
     fetchRooms()
-  }, [])
+  }, [status])
 
   const createRoom = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault() 

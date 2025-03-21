@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { FaGithub, FaTwitter } from "react-icons/fa";
 import { Card } from '@/components/ui/card';
 import { Button } from "@/components/ui/button";
@@ -26,10 +27,12 @@ function Page() {
       
       <Card className="p-6 shadow-lg rounded-lg transition transform hover:scale-105 max-w-2xl w-full">
         <div className="flex justify-center mb-6 w-full">
-          <img 
+          <Image 
             src="/naruto.webp" 
             alt="Naruto GIF" 
             className="rounded-lg w-full object-contain"
+            width={500}
+            height={250}
             style={{ minHeight: "250px" }}
           />
         </div>

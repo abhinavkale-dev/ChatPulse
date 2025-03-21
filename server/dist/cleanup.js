@@ -14,17 +14,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.setupCleanupJob = setupCleanupJob;
 const node_cron_1 = __importDefault(require("node-cron"));
-const prisma_server_1 = __importDefault(require("./lib/prisma.server")); // Adjusted to match your Prisma path
-// Set retention period for chat groups (in days)
-const CHAT_GROUP_RETENTION_DAYS = 60; // 2 months
-// Function to delete old chat groups that haven't been used in the specified retention period
+const prisma_server_1 = __importDefault(require("./lib/prisma.server"));
+const CHAT_GROUP_RETENTION_DAYS = 60;
 function cleanupOldChatGroups() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            // Calculate the cutoff date (current date minus retention period)
             const cutoffDate = new Date();
             cutoffDate.setDate(cutoffDate.getDate() - CHAT_GROUP_RETENTION_DAYS);
-            // Find chat groups older than the retention period
             const oldGroups = yield prisma_server_1.default.chatGroup.findMany({
                 where: {
                     updatedAt: {
@@ -41,7 +37,6 @@ function cleanupOldChatGroups() {
                 return;
             }
             console.log(`Found ${oldGroupIds.length} chat groups older than ${CHAT_GROUP_RETENTION_DAYS} days`);
-            // First delete all messages in these groups
             const deletedMessages = yield prisma_server_1.default.chatMessage.deleteMany({
                 where: {
                     chatGroupId: {
@@ -49,7 +44,6 @@ function cleanupOldChatGroups() {
                     }
                 }
             });
-            // Then delete the groups themselves
             const deletedGroups = yield prisma_server_1.default.chatGroup.deleteMany({
                 where: {
                     id: {
@@ -64,10 +58,7 @@ function cleanupOldChatGroups() {
         }
     });
 }
-// Function to setup the cleanup cron job
 function setupCleanupJob() {
-    // Schedule the chat group cleanup job to run on the 1st day of every other month at 2:00 AM
-    // The '0 2 1 */2 *' cron expression means: At 2:00 AM, on the 1st day of the month, every 2 months
     node_cron_1.default.schedule('0 2 1 */2 *', () => __awaiter(this, void 0, void 0, function* () {
         console.log('Running chat group cleanup job');
         yield cleanupOldChatGroups();

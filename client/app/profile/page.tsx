@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useRouter } from "next/navigation";
 import { Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import Image from "next/image";
 
 interface ExtendedUser {
   id?: string | null;
@@ -47,7 +48,9 @@ export default function ProfilePage() {
         <CardContent className="space-y-6">
           <div className="flex flex-col items-center space-y-4">
             {session.user.avatar && (
-              <img
+              <Image
+                width={200}
+                height={200}
                 src={session.user.avatar}
                 alt={`${session.user.email}'s avatar`}
                 className="h-32 w-32 rounded-full object-cover border border-base-300"
