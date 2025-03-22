@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "ChatPulse",
     description: "A fast chat app",
-    url: "https://chatpulse.chat/",
+    url: "https://chatpulse.chat",
     siteName: "ChatPulse",
     images: [
       {
