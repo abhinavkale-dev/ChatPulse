@@ -1,4 +1,3 @@
-// app/providers.tsx
 'use client'
 
 import { usePathname, useSearchParams } from "next/navigation"
@@ -7,6 +6,7 @@ import { usePostHog } from 'posthog-js/react'
 
 import posthog from 'posthog-js'
 import { PostHogProvider as PHProvider } from 'posthog-js/react'
+import { Analytics } from "@vercel/analytics/react"
 
 export function PostHogProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
@@ -26,6 +26,7 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
   return (
     <PHProvider client={posthog}>
       <SuspendedPostHogPageView />
+      <Analytics />
       {children}
     </PHProvider>
   )
