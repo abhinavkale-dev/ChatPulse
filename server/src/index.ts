@@ -13,7 +13,7 @@ const server = createServer(app)
 
 const io = new Server(server,{
     cors: {
-        origin: ["http://localhost:3000", "https://chat-pulse-gilt.vercel.app", "https://chatpulse.chat/"],
+        origin: ["http://localhost:3000", "https://chatpulse.chat/"],
         methods: ["GET", "POST"],
         credentials: true
     },
