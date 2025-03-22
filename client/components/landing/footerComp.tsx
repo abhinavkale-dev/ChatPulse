@@ -5,7 +5,6 @@ function FooterComp() {
   return (
     <div className="w-full">
       <Footer
-        logo={<Hexagon className="h-10 w-10" />}
         brandName="ChatPulse"
         socialLinks={[
           {
