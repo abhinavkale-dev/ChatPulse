@@ -228,7 +228,20 @@ export const authOptions = {
     },
     
     async redirect({ url, baseUrl }: { url?: string; baseUrl: string }) {
-      return url || `${baseUrl}/home`;
+      // Make URL handling more resilient
+      try {
+        // If URL is provided and valid, use it
+        if (url) {
+          const urlObj = new URL(url);
+          const isSameOrigin = urlObj.origin === new URL(baseUrl).origin;
+          if (isSameOrigin) return url;
+        }
+      } catch (error) {
+        console.error('Invalid URL in redirect:', error);
+      }
+      
+      // Default: redirect to home
+      return '/home';
     },
   },
   
