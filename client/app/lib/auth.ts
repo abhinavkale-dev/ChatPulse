@@ -119,7 +119,7 @@ export const authOptions = {
                   data: { avatar: "/avatar.png" }
                 });
                 return { id: updatedUser.id, email: updatedUser.email, avatar: updatedUser.avatar };
-              } catch (_) {
+              } catch {
                 // If avatar update fails, still allow login
                 return { id: user.id, email: user.email, avatar: "/avatar.png" };
               }
@@ -201,6 +201,7 @@ export const authOptions = {
         token.id = user.id;
         token.email = user.email;
         
+
         if (account?.provider === "google" && profile?.picture) {
           token.avatar = profile.picture;
         } else {
