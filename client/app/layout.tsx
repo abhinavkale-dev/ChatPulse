@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     siteName: "ChatPulse",
     images: [
       {
-        url: "https://i.imgur.com/WoFV6S3.jpg", 
+        url: "https://imgur.com/a/GYOCRf8", 
         width: 1200,
         height: 630,
         alt: "ChatPulse - A fast chat app",
@@ -44,7 +44,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "ChatPulse",
     description: "A fast chat app",
-    images: ["https://i.imgur.com/WoFV6S3.jpg"],
+    images: ["https://imgur.com/a/GYOCRf8"],
   },
 };
 
