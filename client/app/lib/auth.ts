@@ -126,9 +126,12 @@ export const authOptions = {
             return { id: user.id, email: user.email, avatar: user.avatar };
           }
         } catch (error) {
+          // Improved error logging
+          console.error("Authentication error details:", error);
+          
           // Pass through specific errors that should be shown to the user
           if (error instanceof Error) {
-            throw error;
+            throw new Error(`Sign-in failed: ${error.message}`);
           }
           throw new Error("Authentication error. Please try again later.");
         }

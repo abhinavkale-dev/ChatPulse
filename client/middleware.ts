@@ -8,6 +8,7 @@ const publicPaths = [
   '/signup',
   '/api/auth',
   '/info',
+  '/banner.png',
 ];
 
 export async function middleware(request: NextRequest) {
