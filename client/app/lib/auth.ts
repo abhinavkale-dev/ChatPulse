@@ -53,118 +53,88 @@ export const authOptions = {
         confirmPassword: { label: "Confirm Password", type: "password", optional: true },
       },
       async authorize(credentials?: FormCredentials): Promise<AuthResponse | null> {
+        if (!credentials) {
+          throw new Error("Missing credentials");
+        }
+
+        const { email, password, confirmPassword } = credentials;
+
+        if (!email || !password) {
+          throw new Error("Email and password are required.");
+        }
+
         try {
-          if (!credentials) {
-            throw new Error("Missing credentials");
-          }
+          // Check if email is used with Google
+          await checkIfEmailUsedWithGoogle(email);
 
-          const { email, password, confirmPassword } = credentials;
-
-          if (!email || !password) {
-            throw new Error("Email and password are required.");
-          }
-
-          try {
-            await checkIfEmailUsedWithGoogle(email);
-          } catch (error: unknown) {
-            throw error;
-          }
-
+          // Handle signup process
           if (confirmPassword) {
-            // This is a signup request
-            try {
-              signUpSchema.parse({ email, password, confirmPassword });
-            } catch (error: unknown) {
-              throw error;
+            // Validate signup data
+            signUpSchema.parse({ email, password, confirmPassword });
+            
+            // Check if user already exists
+            const existingUser = await prisma.user.findUnique({ where: { email } });
+            if (existingUser) {
+              throw new Error("Email already registered. Please use a different email or sign in.");
             }
-
-            try {
-              const existingUser = await prisma.user.findUnique({ where: { email } });
-              if (existingUser) {
-                throw new Error("Email already registered. Please use a different email or sign in.");
-              }
-            } catch (error: unknown) {
-              if (error instanceof Error && error.message.includes("already registered")) {
-                throw error;
-              }
-              throw new Error("Database error. Please try again later.");
+            
+            // Create new user
+            const hashedPassword = await bcrypt.hash(password, 10);
+            const newUser = await prisma.user.create({
+              data: {
+                email,
+                password: hashedPassword,
+                avatar: "/avatar.png",
+              },
+            });
+            
+            return { id: newUser.id, email: newUser.email, avatar: newUser.avatar };
+          } 
+          // Handle sign in process
+          else {
+            // Validate signin data
+            signInSchema.parse({ email, password });
+            
+            // Find user
+            const user = await prisma.user.findUnique({ where: { email } });
+            if (!user) {
+              throw new Error("No user found. Please sign up first.");
             }
-
-            try {
-              const hashedPassword = await bcrypt.hash(password, 10);
-
-              const newUser = await prisma.user.create({
-                data: {
-                  email,
-                  password: hashedPassword,
-                  avatar: "/avatar.png",
-                },
-              });
-              
-              return { id: newUser.id, email: newUser.email, avatar: newUser.avatar };
-            } catch (error: unknown) {
-              throw new Error("Failed to create account. Please try again later.");
+            
+            // Validate password
+            if (!user.password) {
+              throw new Error("This account doesn't have a password. Please sign in with Google.");
             }
-          } else {
-            try {
-              signInSchema.parse({ email, password });
-            } catch (error: unknown) {
-              throw error;
+            
+            const isPasswordValid = await bcrypt.compare(password, user.password);
+            if (!isPasswordValid) {
+              throw new Error("Invalid password.");
             }
-
-            let user;
-            try {
-              user = await prisma.user.findUnique({ where: { email } });
-              if (!user) {
-                throw new Error("No user found. Please sign up first.");
-              }
-            } catch (error: unknown) {
-              if (error instanceof Error && error.message.includes("No user found")) {
-                throw error;
-              }
-              throw new Error("Database error. Please try again later.");
-            }
-
-            try {
-              if (!user.password) {
-                throw new Error("This account doesn't have a password. Please sign in with Google.");
-              }
-              
-              const isPasswordValid = await bcrypt.compare(password, user.password);
-              if (!isPasswordValid) {
-                throw new Error("Invalid password.");
-              }
-            } catch (error: unknown) {
-              if (error instanceof Error && (
-                  error.message.includes("Invalid password") || 
-                  error.message.includes("doesn't have a password")
-              )) {
-                throw error;
-              }
-              throw new Error("Authentication error. Please try again later.");
-            }
-
-            try {
-              if (!user.avatar) {
+            
+            // Handle avatar and return user
+            if (!user.avatar) {
+              try {
                 const updatedUser = await prisma.user.update({
                   where: { id: user.id },
-                  data: {
-                    avatar: "/avatar.png"
-                  }
+                  data: { avatar: "/avatar.png" }
                 });
                 return { id: updatedUser.id, email: updatedUser.email, avatar: updatedUser.avatar };
+              } catch (_) {
+                // If avatar update fails, still allow login
+                return { id: user.id, email: user.email, avatar: "/avatar.png" };
               }
-              
-              return { id: user.id, email: user.email, avatar: user.avatar };
-            } catch (_error: unknown) {
-              // Still allow login even if avatar update fails
-              return { id: user.id, email: user.email, avatar: user.avatar || "/avatar.png" };
             }
+            
+            return { id: user.id, email: user.email, avatar: user.avatar };
           }
-        } catch (error: unknown) {
-          throw error;
+        } catch (error) {
+          // Pass through specific errors that should be shown to the user
+          if (error instanceof Error) {
+            throw error;
+          }
+          throw new Error("Authentication error. Please try again later.");
         }
-      },
+      }
     }),
   ],
 
@@ -196,7 +166,6 @@ export const authOptions = {
               data: {
                 email: user.email!,
                 avatar: googleAvatarUrl,
-    
               }
             });
             
@@ -232,7 +201,6 @@ export const authOptions = {
         token.id = user.id;
         token.email = user.email;
         
-
         if (account?.provider === "google" && profile?.picture) {
           token.avatar = profile.picture;
         } else {
