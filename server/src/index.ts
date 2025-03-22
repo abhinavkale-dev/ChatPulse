@@ -20,7 +20,10 @@ const io = new Server(server,{
     adapter: createAdapter(redis)
 })
 
-app.use(cors())
+app.use((cors({
+    origin: ["https://chatpulse.chat"],
+    credentials: true
+  })))
 
 setupCleanupJob();
 
