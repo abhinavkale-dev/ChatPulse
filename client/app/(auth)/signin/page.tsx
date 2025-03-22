@@ -60,20 +60,11 @@ function Signin() {
   const onSubmit = async (values: z.infer<typeof signInSchema>) => {
     setIsSubmitting(true);
     try {
-      console.log("Attempting to sign in with:", { email: values.email });
-      
       const result = await signIn("credentials", {
         email: values.email,
         password: values.password,
         redirect: false,
         callbackUrl: "/home"
-      });
-
-      console.log("Sign in result:", { 
-        ok: result?.ok,
-        status: result?.status,
-        error: result?.error,
-        url: result?.url
       });
 
       if (result?.error) {
@@ -95,14 +86,9 @@ function Signin() {
         window.location.href = "/home";
       }
     } catch (error: any) {
-      console.error("Sign in unexpected error:", error);
-      console.error("Error details:", {
-        message: error.message,
-        stack: error.stack,
-        name: error.name
-      });
+      console.error("Sign in error:", error);
       toast.error("Sign In Failed", {
-        description: `Error: ${error.message || "An unexpected error occurred. Please try again later."}`
+        description: "An unexpected error occurred. Please try again later."
       });
     } finally {
       setIsSubmitting(false);

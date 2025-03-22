@@ -186,7 +186,13 @@ function Home() {
             {rooms.map(room => (
               <Card key={room.id} className="overflow-hidden hover:shadow-md transition-all hover:scale-[1.02] cursor-pointer">
                 <CardContent className="flex items-center justify-between p-4">
-                  <Link href={`/chat/${room.id}`} className="flex-1">
+                  <div 
+                    className="flex-1"
+                    onClick={() => {
+                      // Use window.location for Safari compatibility
+                      window.location.href = `/chat/${room.id}`;
+                    }}
+                  >
                     <div>
                       <h1 className="text-xl font-medium">{room.title}</h1>
                       <div className="space-y-1">
@@ -198,7 +204,7 @@ function Home() {
                         </p>
                       </div>
                     </div>
-                  </Link>
+                  </div>
                   <div className="flex items-center gap-2">
                     <MessageCircleMore className="text-primary" />
                     
