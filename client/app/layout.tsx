@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     siteName: "ChatPulse",
     images: [
       {
-        url: "https://chatpulse.vercel.app/banner.png", 
+        url: "https://i.imgur.com/JYP0kcb.png", 
         width: 1200,
         height: 630,
         alt: "ChatPulse - A fast chat app",
