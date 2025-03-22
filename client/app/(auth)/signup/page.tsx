@@ -93,7 +93,7 @@ function Signup() {
         toast.success("Account created successfully!");
         window.location.href = "/home";
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Signup error:", error);
       toast.error("Signup Failed", {
         description: "An unexpected error occurred. Please try again later."

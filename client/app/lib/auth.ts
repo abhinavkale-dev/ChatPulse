@@ -66,7 +66,7 @@ export const authOptions = {
 
           try {
             await checkIfEmailUsedWithGoogle(email);
-          } catch (error: any) {
+          } catch (error: unknown) {
             throw error;
           }
 
@@ -74,7 +74,7 @@ export const authOptions = {
             // This is a signup request
             try {
               signUpSchema.parse({ email, password, confirmPassword });
-            } catch (error: any) {
+            } catch (error: unknown) {
               throw error;
             }
 
@@ -83,8 +83,8 @@ export const authOptions = {
               if (existingUser) {
                 throw new Error("Email already registered. Please use a different email or sign in.");
               }
-            } catch (error: any) {
-              if (error.message.includes("already registered")) {
+            } catch (error: unknown) {
+              if (error instanceof Error && error.message.includes("already registered")) {
                 throw error;
               }
               throw new Error("Database error. Please try again later.");
@@ -102,13 +102,13 @@ export const authOptions = {
               });
               
               return { id: newUser.id, email: newUser.email, avatar: newUser.avatar };
-            } catch (error: any) {
+            } catch (error: unknown) {
               throw new Error("Failed to create account. Please try again later.");
             }
           } else {
             try {
               signInSchema.parse({ email, password });
-            } catch (error: any) {
+            } catch (error: unknown) {
               throw error;
             }
 
@@ -118,8 +118,8 @@ export const authOptions = {
               if (!user) {
                 throw new Error("No user found. Please sign up first.");
               }
-            } catch (error: any) {
-              if (error.message.includes("No user found")) {
+            } catch (error: unknown) {
+              if (error instanceof Error && error.message.includes("No user found")) {
                 throw error;
               }
               throw new Error("Database error. Please try again later.");
@@ -134,9 +134,11 @@ export const authOptions = {
               if (!isPasswordValid) {
                 throw new Error("Invalid password.");
               }
-            } catch (error: any) {
-              if (error.message.includes("Invalid password") || 
-                  error.message.includes("doesn't have a password")) {
+            } catch (error: unknown) {
+              if (error instanceof Error && (
+                  error.message.includes("Invalid password") || 
+                  error.message.includes("doesn't have a password")
+              )) {
                 throw error;
               }
               throw new Error("Authentication error. Please try again later.");
@@ -154,12 +156,12 @@ export const authOptions = {
               }
               
               return { id: user.id, email: user.email, avatar: user.avatar };
-            } catch (error: any) {
+            } catch (_error: unknown) {
               // Still allow login even if avatar update fails
               return { id: user.id, email: user.email, avatar: user.avatar || "/avatar.png" };
             }
           }
-        } catch (error: any) {
+        } catch (error: unknown) {
           throw error;
         }
       },

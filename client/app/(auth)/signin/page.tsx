@@ -85,7 +85,7 @@ function Signin() {
         toast.success("Sign in successful");
         window.location.href = "/home";
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Sign in error:", error);
       toast.error("Sign In Failed", {
         description: "An unexpected error occurred. Please try again later."
