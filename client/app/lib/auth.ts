@@ -220,7 +220,7 @@ export const authOptions = {
           if (isSameOrigin) return url;
         }
       } catch (error) {
-        // Silently handle invalid URLs
+        console.error("Redirect callback error:", error);
       }
 
       return '/home';

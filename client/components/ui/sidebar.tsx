@@ -2,6 +2,7 @@
 import { cn } from "@/lib/utils";
 import Link, { LinkProps } from "next/link";
 import React, { useState, createContext, useContext } from "react";
+import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
 import { IconMenu2, IconX } from "@tabler/icons-react";
 
@@ -166,7 +167,7 @@ export const SidebarLink = ({
   props?: LinkProps;
 }) => {
   const { open, animate } = useSidebar();
-  
+  const router = useRouter();
   
   if (link.onClick && !link.href) {
     return (
@@ -191,10 +192,23 @@ export const SidebarLink = ({
     );
   }
   
+  // Fix Safari navigation issues by using router
+  const handleNavigation = (e: React.MouseEvent) => {
+    if (link.href) {
+      e.preventDefault();
+      // Force hard navigation for certain routes that have issues in Safari
+      if (['/profile', '/info', '/socials'].includes(link.href)) {
+        window.location.href = link.href;
+      } else {
+        router.push(link.href);
+      }
+    }
+  };
 
   return (
     <Link
       href={link.href || "#"}
+      onClick={handleNavigation}
       className={cn(
         "flex items-center justify-start gap-2 group/sidebar py-2",
         className
