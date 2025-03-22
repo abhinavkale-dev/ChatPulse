@@ -19,7 +19,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "ChatPulse",
   description: "A fast chat app",
-  metadataBase: new URL('https://chat-pulse-gilt.vercel.app'),
+  metadataBase: new URL('https://chatpulse.vercel.app'),
   icons: {
     icon: '/favicon.ico',
     shortcut: '/favicon.ico'
@@ -27,11 +27,11 @@ export const metadata: Metadata = {
   openGraph: {
     title: "ChatPulse",
     description: "A fast chat app",
-    url: "https://chat-pulse-gilt.vercel.app/",
+    url: "https://chatpulse.vercel.app/",
     siteName: "ChatPulse",
     images: [
       {
-        url: "/banner.png", 
+        url: "https://chatpulse.vercel.app/banner.png", 
         width: 1200,
         height: 630,
         alt: "ChatPulse - A fast chat app",
