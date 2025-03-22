@@ -161,7 +161,7 @@ export const authOptions = {
           return true;
         } catch (error) {
           console.error("Error in signIn callback:", error);
-          return false; // Return false instead of a redirect URL to handle errors properly
+          return false;
         }
       }
       return true;
@@ -208,7 +208,6 @@ export const authOptions = {
     },
     
     async redirect({ url, baseUrl }: { url?: string; baseUrl: string }) {
-      // Use the provided callback URL if available, otherwise default to home page
       return url || `${baseUrl}/home`;
     },
   },
