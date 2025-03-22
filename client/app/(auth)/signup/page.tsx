@@ -71,8 +71,7 @@ function Signup() {
         email: values.email,
         password: values.password,
         confirmPassword: values.confirmPassword,
-        redirect: false,
-        callbackUrl: "/home"
+        redirect: false
       });
   
       if (result?.error) {

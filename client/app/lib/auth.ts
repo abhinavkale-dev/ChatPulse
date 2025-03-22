@@ -62,21 +62,16 @@ export const authOptions = {
         }
 
         try {
-          // Check if email is used with Google
           await checkIfEmailUsedWithGoogle(email);
 
-          // Handle signup process
           if (confirmPassword) {
-            // Validate signup data
             signUpSchema.parse({ email, password, confirmPassword });
             
-            // Check if user already exists
             const existingUser = await prisma.user.findUnique({ where: { email } });
             if (existingUser) {
               throw new Error("Email already registered. Please use a different email or sign in.");
             }
-            
-            // Create new user
+
             const hashedPassword = await bcrypt.hash(password, 10);
             const newUser = await prisma.user.create({
               data: {
@@ -88,18 +83,14 @@ export const authOptions = {
             
             return { id: newUser.id, email: newUser.email, avatar: newUser.avatar };
           } 
-          // Handle sign in process
           else {
-            // Validate signin data
             signInSchema.parse({ email, password });
-            
-            // Find user
+
             const user = await prisma.user.findUnique({ where: { email } });
             if (!user) {
               throw new Error("No user found. Please sign up first.");
             }
             
-            // Validate password
             if (!user.password) {
               throw new Error("This account doesn't have a password. Please sign in with Google.");
             }
@@ -109,7 +100,6 @@ export const authOptions = {
               throw new Error("Invalid password.");
             }
             
-            // Handle avatar and return user
             if (!user.avatar) {
               try {
                 const updatedUser = await prisma.user.update({
@@ -118,7 +108,6 @@ export const authOptions = {
                 });
                 return { id: updatedUser.id, email: updatedUser.email, avatar: updatedUser.avatar };
               } catch {
-                // If avatar update fails, still allow login
                 return { id: user.id, email: user.email, avatar: "/avatar.png" };
               }
             }
@@ -126,10 +115,6 @@ export const authOptions = {
             return { id: user.id, email: user.email, avatar: user.avatar };
           }
         } catch (error) {
-          // Improved error logging
-          console.error("Authentication error details:", error);
-          
-          // Pass through specific errors that should be shown to the user
           if (error instanceof Error) {
             throw new Error(`Sign-in failed: ${error.message}`);
           }
@@ -228,19 +213,16 @@ export const authOptions = {
     },
     
     async redirect({ url, baseUrl }: { url?: string; baseUrl: string }) {
-      // Make URL handling more resilient
       try {
-        // If URL is provided and valid, use it
         if (url) {
           const urlObj = new URL(url);
           const isSameOrigin = urlObj.origin === new URL(baseUrl).origin;
           if (isSameOrigin) return url;
         }
       } catch (error) {
-        console.error('Invalid URL in redirect:', error);
+        // Silently handle invalid URLs
       }
-      
-      // Default: redirect to home
+
       return '/home';
     },
   },

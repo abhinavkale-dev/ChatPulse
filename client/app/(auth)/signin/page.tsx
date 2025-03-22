@@ -60,12 +60,10 @@ function Signin() {
   const onSubmit = async (values: z.infer<typeof signInSchema>) => {
     setIsSubmitting(true);
     try {
-      // Modified to avoid URL construction errors
       const result = await signIn("credentials", {
         email: values.email,
         password: values.password,
         redirect: false
-        // Removed callbackUrl to prevent URL construction errors
       });
 
       if (result?.error) {

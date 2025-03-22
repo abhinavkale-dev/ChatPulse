@@ -23,7 +23,6 @@ export async function DELETE(
       )
     }
 
-    // Get the room
     const room = await prisma.chatGroup.findUnique({
       where: { id: roomId },
       select: { userId: true }
