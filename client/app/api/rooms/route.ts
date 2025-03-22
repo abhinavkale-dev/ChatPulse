@@ -4,7 +4,7 @@ import prisma from "@/app/lib/prisma"
 import { NextRequest, NextResponse } from "next/server";
 
 const ROOM_CREATION_RATE_LIMIT = {
-  MAX_ROOMS: 2,    
+  MAX_ROOMS: 1,    
   TIME_WINDOW: 3600
 };
 
@@ -85,7 +85,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { 
           error: "Rate limit exceeded", 
-          message: `You can only create ${ROOM_CREATION_RATE_LIMIT.MAX_ROOMS} rooms per hour. Please try again later.`
+          message: `You can only create ${ROOM_CREATION_RATE_LIMIT.MAX_ROOMS} room per hour. Please try again later.`
         }, 
         { status: 429 }
       );
