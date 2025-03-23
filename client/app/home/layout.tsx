@@ -52,7 +52,10 @@ export default function HomeLayout({ children }: { children: React.ReactNode }) 
   
   const handleLogout = async () => {
     toast.promise(
-      signOut({ callbackUrl: "/" }),
+      signOut({ 
+        callbackUrl: "/",
+        redirect: true
+      }),
       {
         loading: "Logging out...",
         success: "Successfully logged out!",

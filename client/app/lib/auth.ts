@@ -214,10 +214,20 @@ export const authOptions = {
     
     async redirect({ url, baseUrl }: { url?: string; baseUrl: string }) {
       try {
-        if (url) {
+        // Special handling for signout redirecting to root
+        if (url === '/') {
+          return '/';
+        }
+        
+        // Check if URL is fully qualified
+        if (url && url.startsWith('http')) {
           const urlObj = new URL(url);
           const isSameOrigin = urlObj.origin === new URL(baseUrl).origin;
           if (isSameOrigin) return url;
+        } 
+        // Handle relative URLs like '/home'
+        else if (url && url.startsWith('/')) {
+          return url;
         }
       } catch (error) {
         console.error("Redirect callback error:", error);
