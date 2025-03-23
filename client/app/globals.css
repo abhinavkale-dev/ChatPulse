@@ -123,6 +123,17 @@
   body {
     @apply bg-background text-foreground;
   }
+  
+  /* Text selection styling */
+  ::selection {
+    background-color: var(--muted);
+    color: var(--primary);
+  }
+  
+  ::-moz-selection {
+    background-color: var(--muted);
+    color: var(--primary);
+  }
 }
 
 .floating {
