@@ -52,8 +52,10 @@ const Hero: React.FC = () => {
               </div>
             </div>
             
-            <div className="flex-1 w-full max-w-md mx-auto lg:mx-0 floating">
-              <ChatDemo />
+            <div className="flex-1 w-full max-w-md mx-auto lg:mx-0" style={{ height: 'auto', minHeight: '450px' }}>
+              <div className="floating">
+                <ChatDemo />
+              </div>
             </div>
           </div>
         </div>

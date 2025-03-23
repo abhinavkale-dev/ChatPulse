@@ -90,37 +90,27 @@ const ChatDemo: React.FC = () => {
     isTyping: false, 
     messageIndex: 0 
   });
-  const [resetDemo, setResetDemo] = useState(false);
+  const [animationCompleted, setAnimationCompleted] = useState(false);
 
   useEffect(() => {
-    // Reset effect
-    if (resetDemo) {
-      setVisibleMessages([]);
-      setTypingInfo({ isTyping: false, messageIndex: 0 });
-      setResetDemo(false);
-      return;
+    if (!animationCompleted && visibleMessages.length === 0) {
+      const initialDelay = setTimeout(() => {
+        if (mockMessages.length > 0) {
+          setVisibleMessages([mockMessages[0]]);
+          setTypingInfo({ isTyping: true, messageIndex: 1 });
+        }
+      }, 1000);
+      
+      return () => clearTimeout(initialDelay);
     }
-
-    // Initial delay before starting the demo
-    const initialDelay = setTimeout(() => {
-      if (mockMessages.length > 0 && visibleMessages.length === 0) {
-        setVisibleMessages([mockMessages[0]]);
-        setTypingInfo({ isTyping: true, messageIndex: 1 });
-      }
-    }, 1000);
-
-    return () => clearTimeout(initialDelay);
-  }, [resetDemo]);
+  }, [animationCompleted, visibleMessages.length]);
 
   useEffect(() => {
-    // Handle typing animation and message display
     if (typingInfo.isTyping && typingInfo.messageIndex < mockMessages.length) {
       const typingTimer = setTimeout(() => {
-        // Stop typing and show the next message
         setTypingInfo({ isTyping: false, messageIndex: typingInfo.messageIndex });
         setVisibleMessages(prev => [...prev, mockMessages[typingInfo.messageIndex]]);
         
-        // Set up the next person to type after a short pause
         const nextTypingTimer = setTimeout(() => {
           if (typingInfo.messageIndex + 1 < mockMessages.length) {
             setTypingInfo({ 
@@ -128,11 +118,7 @@ const ChatDemo: React.FC = () => {
               messageIndex: typingInfo.messageIndex + 1 
             });
           } else {
-            // All messages shown, reset after a long delay
-            const resetTimer = setTimeout(() => {
-              setResetDemo(true);
-            }, 5000);
-            return () => clearTimeout(resetTimer);
+            setAnimationCompleted(true);
           }
         }, 1000);
         
