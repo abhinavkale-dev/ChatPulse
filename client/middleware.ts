@@ -9,7 +9,6 @@ const publicPaths = [
   '/api/auth',
   '/info',
   '/banner.png',
-  '/api/insights', // Allow Vercel Speed Insights API
 ];
 
 export async function middleware(request: NextRequest) {
@@ -18,8 +17,7 @@ export async function middleware(request: NextRequest) {
   const isPublicPath = publicPaths.some(path => 
     pathname === path || 
     pathname.startsWith(`${path}/`) ||
-    pathname.startsWith('/api/auth/') ||
-    pathname.startsWith('/_vercel/') // Allow all Vercel system routes
+    pathname.startsWith('/api/auth/')
   );
 
   const token = await getToken({ 
@@ -51,8 +49,7 @@ export const config = {
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - public folder
-     * - _vercel (Vercel system routes)
      */
-    '/((?!_next/static|_next/image|favicon\.ico|public|_vercel).*)',
+    '/((?!_next/static|_next/image|favicon\.ico|public).*)',
   ],
 };
