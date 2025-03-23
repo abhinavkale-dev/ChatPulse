@@ -213,25 +213,23 @@ export const authOptions = {
     },
     
     async redirect({ url, baseUrl }: { url?: string; baseUrl: string }) {
-      try {
-        if (url === '/') {
-          return '/';
-        }
-        
-
-        if (url && url.startsWith('http')) {
-          const urlObj = new URL(url);
-          const isSameOrigin = urlObj.origin === new URL(baseUrl).origin;
-          if (isSameOrigin) return url;
-        } 
-
-        else if (url && url.startsWith('/')) {
-          return url;
-        }
-      } catch (error) {
-        console.error("Redirect callback error:", error);
+      // Handle absolute URLs that are same-origin
+      if (url && url.startsWith(baseUrl)) {
+        const path = url.substring(baseUrl.length);
+        return path;
+      }
+      
+      // Handle signout case specifically
+      if (url === '/') {
+        return '/';
+      }
+      
+      // Handle other relative URLs
+      if (url && url.startsWith('/')) {
+        return url;
       }
 
+      // Default fallback
       return '/home';
     },
   },
