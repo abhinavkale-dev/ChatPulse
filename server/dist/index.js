@@ -17,14 +17,17 @@ const app = (0, express_1.default)();
 const server = (0, http_1.createServer)(app);
 const io = new socket_io_1.Server(server, {
     cors: {
-        origin: ["http://localhost:3000", "chat-pulse-gilt.vercel.app"],
+        origin: ["http://localhost:3000", "https://chatpulse.chat"],
         methods: ["GET", "POST"],
         credentials: true
     },
     adapter: (0, redis_streams_adapter_1.createAdapter)(redis_1.default)
 });
 exports.io = io;
-app.use((0, cors_1.default)());
+app.use(((0, cors_1.default)({
+    origin: ["https://chatpulse.chat"],
+    credentials: true
+})));
 (0, cleanup_1.setupCleanupJob)();
 server.listen(port, () => {
     console.log(`Server is running on port ${port}`);
