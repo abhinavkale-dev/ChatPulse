@@ -213,24 +213,15 @@ export const authOptions = {
     },
     
     async redirect({ url, baseUrl }: { url?: string; baseUrl: string }) {
-      // Handle absolute URLs that are same-origin
       if (url && url.startsWith(baseUrl)) {
-        const path = url.substring(baseUrl.length);
-        return path;
-      }
-      
-      // Handle signout case specifically
-      if (url === '/') {
-        return '/';
-      }
-      
-      // Handle other relative URLs
-      if (url && url.startsWith('/')) {
         return url;
       }
-
-      // Default fallback
-      return '/home';
+      
+      if (url && url.startsWith('/')) {
+        return `${baseUrl}${url.startsWith('/') ? url : `/${url}`}`;
+      }
+      
+      return `${baseUrl}/home`;
     },
   },
   
