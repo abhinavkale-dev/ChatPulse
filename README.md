@@ -21,6 +21,7 @@ ChatPulse is a full-stack chat application that enables real-time messaging in a
 - **Responsive design**: Works on desktop and mobile devices
 - **User presence**: See who's online in real-time
 - **Message persistence**: Chat history is saved and loaded from the database
+- **Analytics**: User behavior tracking and insights with PostHog
 
 ## Tech Stack
 
@@ -31,6 +32,7 @@ ChatPulse is a full-stack chat application that enables real-time messaging in a
 - Socket.io client
 - NextAuth.js for authentication
 - React Hook Form with Zod validation
+- PostHog for analytics and product insights
 
 ### Backend (Server)
 - Node.js with Express
@@ -72,13 +74,33 @@ Each directory has its own README with detailed setup and running instructions:
    ```bash
    cd ../client
    npm install
-   # Configure your .env.local file
+   # Configure your .env.local file with PostHog API key and other environment variables
    npm run dev
    ```
 
 4. **Access the application**
    - Frontend: http://localhost:3000
    - Backend: http://localhost:8080
+
+## Analytics
+
+ChatPulse uses [PostHog](https://posthog.com/) for tracking user behavior, feature usage, and product insights. The analytics implementation:
+
+<p align="center">
+  <img src="client/public/posthog-chatpulse.jpeg" alt="ChatPulse User Analytics" width="700">
+</p>
+
+- Tracks user sessions and engagement
+- Monitors feature usage and adoption
+- Provides insights for improving user experience
+- Respects user privacy with configurable data collection
+
+To configure PostHog, add your PostHog API key to the client's environment variables:
+
+```
+NEXT_PUBLIC_POSTHOG_KEY=your_posthog_api_key
+NEXT_PUBLIC_POSTHOG_HOST=https://app.posthog.com
+```
 
 ## Development
 
