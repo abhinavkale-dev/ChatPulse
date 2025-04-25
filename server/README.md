@@ -48,7 +48,7 @@ This is the backend server for ChatPulse, a real-time chat application.
      ```
      DATABASE_URL="postgresql://user:password@localhost:5432/chatpulse"
      REDIS_URL="redis://localhost:6379"
-     PORT=4000
+     PORT=8080
      ```
 
 ### Development
@@ -61,7 +61,7 @@ npm run dev
 yarn dev
 ```
 
-The server will start on the port specified in your environment variables (default: 4000).
+The server will start on the port specified in your environment variables (default: 8080).
 
 ### Build for Production
 
