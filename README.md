@@ -30,7 +30,6 @@ ChatPulse is a full-stack chat application that enables real-time messaging in a
 - Tailwind CSS & shadcn/ui
 - Socket.io client
 - NextAuth.js for authentication
-- Zustand for state management
 - React Hook Form with Zod validation
 
 ### Backend (Server)
