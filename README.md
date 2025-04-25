@@ -78,7 +78,7 @@ Each directory has its own README with detailed setup and running instructions:
 
 4. **Access the application**
    - Frontend: http://localhost:3000
-   - Backend: http://localhost:4000
+   - Backend: http://localhost:8080
 
 ## Development
 
