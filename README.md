@@ -56,7 +56,7 @@ Each directory has its own README with detailed setup and running instructions:
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/chatpulse.git
+   git clone https://github.com/abhinavkale-dev/chatpulse.git
    cd chatpulse
    ```
 
